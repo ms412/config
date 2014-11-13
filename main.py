@@ -28,8 +28,8 @@ from library.libtree import tree
 from library.libmsgbus import msgbus
 
 from module.adapter.config import configmodule
-from module.adapter.logging import loghandle
-from module.adapter.broker import mqttClient
+from module.adapter.logging import log_adapter
+from module.adapter.broker import mqtt_adapter
 
 
 
@@ -49,27 +49,19 @@ class manager(msgbus):
 
     def start_config(self):
         print('Start Configuration',self._cfg_file)
-        cfg_module = configmodule()
-        cfg_module.setup(self._cfg_file)
-      # self._cfg_root_handle = cfg_module.loadFile(self._cfg_file)
-       # self._cfg_general_handle = cfg_module.select('GENERAL')
-        #self._cfg_broker_handle = cfg_module.select('BROKER')
-      #  print ('GENERAL', self._cfg_general_handle.debug())
-       # print ('BROKER', self._cfg_broker_handle.debug())
+        self._cfg_thread = configmodule(self._cfg_file)
+        self._cfg_thread.start()
 
     def start_logging(self):
         print('Debug Logging1')
-       # logfile = self._cfg_general_handle.getNode('LOGFILE','/var/log/mqtt2gpio.log')
-       # logmode = self._cfg_general_handle.getNode('LOGMODE','DEBUG')
-        self._log_handle = loghandle()
-        #self._log_handle.open(logfile,logmode)
-
-        #self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
+        self._log_thread = log_adapter()
+        self._log_thread.start()
 
     def start_borker(self):
-        self.msgbus_publish('LOG','%s Start MQTT broker'%('INFO'))
-        self._brokerThread = mqttClient()
-        self._brokerThread.start()
+        print('Start Broker')
+       # self.msgbus_publish('LOG','%s Start MQTT broker'%('INFO'))
+        self._broker_thread = mqtt_adapter()
+        self._broker_thread.start()
 
     def run(self):
         """
@@ -78,6 +70,13 @@ class manager(msgbus):
 
         self.start_logging()
         self.start_config()
+        self.start_borker()
+
+        time.sleep(5)
+
+        self._cfg_thread.publish()
+
+        self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
       #  self.start_borker()
 
 

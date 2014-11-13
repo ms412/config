@@ -1,14 +1,33 @@
 
 import yaml
 import json
+import time
+from threading import Thread, Lock
 
 from library.libtree import tree
 from library.libmsgbus import msgbus
 
-class configmodule(msgbus):
+class configmodule(Thread,msgbus):
 
-     def __init__(self):
+     def __init__(self,cfg_file):
+         Thread.__init__(self)
          self._rootPtr = ''
+         self.cfg_file = cfg_file
+
+     def run(self):
+
+        print ('run config adapter')
+
+        self.setup(self.cfg_file)
+
+        threadRun = True
+
+        while threadRun:
+            time.sleep(3)
+            print('config loop')
+            self.msgbus_publish('LOG','%s Configuration loop '%('WARNING'))
+
+        return
 
      def setup(self,filename):
          x = self.loadFile(filename)
@@ -48,6 +67,10 @@ class configmodule(msgbus):
          yaml.dump(self._rootPtr.gettree(), handle)
          handle.close()
          return
+
+     def publish(self):
+         print('Root Pointer',self._rootPtr)
+         self.msgbus_publish('CONF',self._rootPtr)
 
      def select(self,path=None):
          tempPtr = self._rootPtr.select(path)

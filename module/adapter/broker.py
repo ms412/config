@@ -10,10 +10,15 @@ import paho.mqtt.client as mqtt
 from library.libmsgbus import msgbus
 
 
-class mqttClient(Thread,msgbus):
+class mqtt_adapter(Thread,msgbus):
 
     def __init__(self):
         Thread.__init__(self)
+
+        print('init mqtt adapter')
+
+        self.cfg_queue = Queue()
+        self.log_queue = Queue()
 
         self.cfgQueue = Queue()
         self.dataRxQueue = Queue()
@@ -24,41 +29,44 @@ class mqttClient(Thread,msgbus):
         self.mqttc = ''
 
 
-        self.host = str('iot.eclipse.org')
-        self.port = int(1883)
-        self.topic = str('$SYS/#')
-        self.publish = str('/OPENHAB02')
+        self._host = str('iot.eclipse.org')
+        self._port = int(1883)
+        self._subscribe = str('$SYS/#')
+        self._publish = str('/OPENHAB02')
 
     def run(self):
-
-        print ('run mqtt')
 
         self.setup()
 
         threadRun = True
 
-        while(threadRun == True):
-            #print('loop mqtt')
-            try:
-                self.msgObj = self.cfgQueue.get_nowait()
-                print('MQTT Config available',self.msgObj)
-                self.msgHeader()
-            except:
-                threadRun = True
-            #    print ('MQTT Queu Empty')
-           # time.sleep(1)
-            self.mqttc.loop()
+        while threadRun:
+
+            time.sleep(2)
+            print('logging mqtt')
+
+            while not self.cfg_queue.empty():
+                self.on_cfg(self.cfg_queue.get())
+
+      #      self.mqttc.loop()
         return
 
 
     def setup(self):
+        print ('Setup mqtt')
+        self.msgbus_subscribe('CONF', self._on_cfg)
+        self.msgbus_subscribe('NBI', self._on_data)
+        return
 
-        print ('SEtup mqtt')
+    def cfg_update(self):
+
+        print('mqtt config update')
+        self.msgbus_publish('LOG','%s Broker Configuration Update '%('INFO'))
 
         self.mqttc = mqtt.Client(str(os.getpid()))
 
-        self.mqttc.connect(self.host, self.port, 60)
-        self.mqttc.subscribe(self.topic, 0)
+        self.mqttc.connect(self._host, self._port, 60)
+        self.mqttc.subscribe(self._subscribe, 0)
 
         self.mqttc.on_message = self.on_message
         self.mqttc.on_connect = self.on_connect
@@ -66,13 +74,33 @@ class mqttClient(Thread,msgbus):
         self.mqttc.on_subscribe = self.on_subscribe
         self.mqttc.on_disconnect = self.on_disconnect
 
-        self.msgbus_subscribe('NBI', self._on_data)
+        return
+
+
+    def _on_cfg(self,cfg_msg):
+        self.cfg_queue.put(cfg_msg)
+        return
+
+    def on_cfg(self,cfg_msg):
+
+        broker = cfg_msg.select('BROKER')
+        self.msgbus_publish('LOG','%s Broker Configuration %s '%('INFO', broker.getTree()))
+
+        self._host = str(broker.getNode('HOST','iot.eclipse.org'))
+        self._port = int(broker.getNode('PORT',1883))
+        self._subscribe = str(broker.getNode('SUBSCRIBE_CH','$SYS/#'))
+        self._publish = str(broker.getNode('PUBLISH_CH','/OPENHAB02'))
+
+        self.cfg_update()
+        return
 
     def on_connect(self, mqttc, obj, rc):
         print('Mqtt Connected', str(rc))
+        self.msgbus_publish('LOG','%s Connected to MQTT Broker'%('INFO'))
 
     def on_disconnect(self, rc):
         print('Mqtt Disconnect', rc)
+        self.msgbus_publish('LOG','%s Lost Connection to MQTT Broker'%('INFO'))
         self.mqttc.connect(self.host, self.port, 60)
         return 0
 

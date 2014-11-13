@@ -5,56 +5,82 @@ import time
 #from threading import Thread, Lock
 from queue import Queue
 
-from module.general.msgbus import MsgBus
-from module.general.dicttree import DictionaryTree
+from library.libmsgbus import msgbus
+from library.libtree import tree
+from module.adapter.config import configmodule
 
 from module.interface.vdm import VDM
 
-class VHM(MsgBus):
+class VHM(msgbus):
 
     def __init__(self):
       #  Thread.__init__(self)
 
-        self.cfgQueue = Queue()
-        self.RequestQueue = Queue()
-        self.NotifyQueue = Queue()
+        self.cfg_queue = Queue()
+
+        self.req_vhm_queue = Queue()
+        self.notify_vdm_queue = Queue()
 
         self.threadList = {}
 
         self.msgObj = 0
 
         print ('InitVHM')
-        self.Setup()
+        self.setup()
+
+    def setup(self):
+
+        self.msgbus_subscribe('CONF', self._on_cfg)
+        self.msgbus_subscribe('VHM_REQUEST', self._on_vhm_request)
+        self.msgbus_subscribe('VDM_NOTIFY', self._on_vdm_notify)
 
     def run(self):
 
-        print ('run mqtt')
+        print ('run VHM')
         self.setup()
 
         threadRun = True
 
-        while(threadRun == True):
+        while threadRun:
             print('loop vhm')
-            try:
-                self.msgObj = self.cfgQueue.get_nowait()
-                print('VHM Config available',self.msgObj)
-                self.msgHeader()
-            except:
-                print ('VHM Queu Empty')
+
+            while not self.cfg_queue.empty():
+                self.on_cfg(self.cfg_queue.get())
+
+            while not self.req_vhm_queue.empty():
+                self.on_vhm_request(self.req_vhm_queue.get())
+
+            while not self.notify_vdm_queue.empty():
+                self.on_vdm_notify(self.notify_vdm_queue.get())
+
             time.sleep(1)
         return
 
-    def Setup(self):
+    def _on_cfg(self,cfg_msg):
+        self.cfg_queue.put(cfg_msg)
+        return
 
-        '''
-        Subscribe to Notification Channels
-        '''
+    def on_cfg(self,msg):
+       # print('Config message',cfg_msg)
+        devices = cfg_msg.select('DEVICES')
+        self.msgbus_publish('LOG','%s VHM Configuration %s '%('INFO', devices.getTree()))
+        for item in devices.getNodes():
+            self.msgbus_publish('VDM_REQUEST',item)
+        return
 
-        self.subscribe('CONFIG', self.ConfigIF)
-        self.subscribe('REQUEST', self.RequestIF)
-        self.subscribe('NOTIFY', self.NotifyIF)
+    def _on_vhm_request(self,req):
+        self.req_vhm_queue.put(req)
+        return
 
-        print('VHM Setup Completed')
+    def on_vhm_request(self,req):
+        return
+
+    def _on_vdm_notify(self,notify):
+        self.req_vdm_queue.put(notify)
+        return
+
+    def on_vhm_modify(self,msg):
+        return
 
     def ConfigIF(self,message):
 

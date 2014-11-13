@@ -8,7 +8,7 @@ class tree(object):
         self._treeObj = tree
         #print ('Tree',tree)
 
-     def select(self,path = None):
+     def select_old(self,path = None):
          '''
          selects a subtree of the tree
          and creates a new DictTreeLib object on which
@@ -20,11 +20,34 @@ class tree(object):
 
          return tempTree
 
+     def select(self,path = None):
+         tempTree = self._treeObj
+         for temp in path.split('.'):
+             print('temptree',tempTree)
+             tempTree = tempTree.get(temp)
+
+         return tree(tempTree)
+
+
      def getTree(self):
          return self._treeObj
 
      def getRoot(self):
          return self._treeObj
+
+     def getNodes(self):
+         nodelist = []
+         for k,v in self._treeObj.items():
+             if isinstance(v,dict):
+                 nodelist.append(self._treeObj[k])
+         return nodelist
+
+     def getLeafs(self):
+         leaflist = []
+         for k,v in self._treeObj.items():
+             if not isinstance(v,dict):
+                 leaflist.append(self._treeObj[k])
+         return leaflist
 
      def getNode(self,key,default = None):
          return self._treeObj.get(key,default)
