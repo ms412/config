@@ -50,23 +50,24 @@ class manager(msgbus):
     def start_config(self):
         print('Start Configuration',self._cfg_file)
         cfg_module = configmodule()
-        self._cfg_root_handle = cfg_module.loadFile(self._cfg_file)
-        self._cfg_general_handle = cfg_module.select('GENERAL')
-        self._cfg_broker_handle = cfg_module.select('BROKER')
+        cfg_module.setup(self._cfg_file)
+      # self._cfg_root_handle = cfg_module.loadFile(self._cfg_file)
+       # self._cfg_general_handle = cfg_module.select('GENERAL')
+        #self._cfg_broker_handle = cfg_module.select('BROKER')
       #  print ('GENERAL', self._cfg_general_handle.debug())
        # print ('BROKER', self._cfg_broker_handle.debug())
 
     def start_logging(self):
-        print('Debug Logging1', self._cfg_general_handle.debug())
-        logfile = self._cfg_general_handle.getNode('LOGFILE','/var/log/mqtt2gpio.log')
-        logmode = self._cfg_general_handle.getNode('LOGMODE','DEBUG')
+        print('Debug Logging1')
+       # logfile = self._cfg_general_handle.getNode('LOGFILE','/var/log/mqtt2gpio.log')
+       # logmode = self._cfg_general_handle.getNode('LOGMODE','DEBUG')
         self._log_handle = loghandle()
-        self._log_handle.open(logfile,logmode)
+        #self._log_handle.open(logfile,logmode)
 
-        self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
+        #self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
 
     def start_borker(self):
-        self._log_handle.info('Start MQTT Broker')
+        self.msgbus_publish('LOG','%s Start MQTT broker'%('INFO'))
         self._brokerThread = mqttClient()
         self._brokerThread.start()
 
@@ -74,9 +75,10 @@ class manager(msgbus):
         """
         Entry point, initiates components and loops forever...
         """
-        self.start_config()
+
         self.start_logging()
-     #  self.start_borker()
+        self.start_config()
+      #  self.start_borker()
 
 
 

@@ -2,6 +2,7 @@
 import logging
 
 from library.libmsgbus import msgbus
+from module.adapter.config import configmodule
 
 # Singleton/SingletonDecorator.py
 class SingletonDecorator:
@@ -20,22 +21,34 @@ class logwrapper(msgbus):
     def __init__(self):
 
         self.msgbus_subscribe('LOG', self._on_log)
-        print ('init log')
-
+        self.msgbus_subscribe('CONF', self._on_config)
 
     def _on_log(self, logmsg):
-        print('Logmessage:',logmsg)
-       # getattr(self,logmsg['logtype'],logmsg['logmsg'])
         if logmsg.startswith('INFO'):
             msg = logmsg.replace('INFO','')
             self.info(msg.strip())
-          #  print('INFO')
         elif logmsg.startwith('WARNING'):
             msg = logmsg.replace('WARNING','')
             self.warning(msg.strip())
+        elif logmsg.startwith('ERROR'):
+            msg = logmsg.replace('ERROR','')
+            self.error(msg.strip())
+        elif logmsg.startwith('CRITICAL'):
+            msg = logmsg.replace('CRITICAL','')
+            self.critical(msg.strip())
         else:
-            print ('Not found')
-      #      self.info(logmsg)
+            self.info(logmsg.strip)
+
+    def _on_config(self,conf_msg):
+        print('Config message',conf_msg)
+        print(type(conf_msg))
+        x = configmodule()
+        general = x.loadDict(conf_msg.select('GENERAL'))
+        print('test',conf_msg.select('GENERAL'))
+        logfile = general.getNode('LOGFILE','/var/log/mqtt2gpio.log')
+        logmode = general.getNode('LOGMODE','INFO')
+        self.open(logfile,logmode)
+
 
 
 

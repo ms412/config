@@ -3,11 +3,16 @@ import yaml
 import json
 
 from library.libtree import tree
+from library.libmsgbus import msgbus
 
-class configmodule(object):
+class configmodule(msgbus):
 
      def __init__(self):
          self._rootPtr = ''
+
+     def setup(self,filename):
+         x = self.loadFile(filename)
+         self.msgbus_publish('CONF',x)
 
      def _create(self,dictCfg):
          self._rootPtr = tree(dictCfg)

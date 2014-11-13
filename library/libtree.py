@@ -4,8 +4,9 @@
 class tree(object):
 
      def __init__(self,tree):
-
-         self._treeObj = tree
+        print('Tree init')
+        self._treeObj = tree
+        #print ('Tree',tree)
 
      def select(self,path = None):
          '''
