@@ -1,33 +1,33 @@
 
-class MsgBus(object):
+class msgbus(object):
     callerList = {}
 
     def __init__(self):
         test =0
 
 
-    def subscribe(self, channel, callback):
+    def msgbus_subscribe(self, channel, callback):
 
-        if channel not in MsgBus.callerList.keys():
+        if channel not in msgbus.callerList.keys():
    #         print ('Create Channel new')
-            MsgBus.callerList[channel] = []
-        MsgBus.callerList[channel].append(callback)
+            msgbus.callerList[channel] = []
+        msgbus.callerList[channel].append(callback)
 
-   #     print('callerList',MsgBus.callerList)
+   #     print('callerList',msgbus.callerList)
 
         return True
 
     def unsubscribe(self, channel, callback):
 
-        if channel in MsgBus.callerList.keys():
-            MsgBus.callerList[channel].remove(callback)
+        if channel in msgbus.callerList.keys():
+            msgbus.callerList[channel].remove(callback)
 
         return True
 
     def unsubscribe_all(self, channel):
 
-        if channel in MsgBus.callerList.keys():
-            MsgBus.callerList[channel] = []
+        if channel in msgbus.callerList.keys():
+            msgbus.callerList[channel] = []
 
         return True
 
@@ -35,20 +35,20 @@ class MsgBus(object):
 
         result = 0
 
-        if channel in MsgBus.callerList.keys():
-            result = len(MsgBus.callerList[channel])
+        if channel in msgbus.callerList.keys():
+            result = len(msgbus.callerList[channel])
 
         return result
 
-    def MsgBusPublish(self, channel, *args, **kwargs):
+    def msgbus_publish(self, channel, *args, **kwargs):
 
         result = False
 
     #   print('Hier',channel)
-        if channel in MsgBus.callerList.keys():
+        if channel in msgbus.callerList.keys():
             result = True
      #       print('Channel',channel)
-            for item in MsgBus.callerList[channel]:
+            for item in msgbus.callerList[channel]:
       #          print('Item',item)
                 item(*args, **kwargs)
         else:
@@ -58,7 +58,7 @@ class MsgBus(object):
 
     def debug(self):
 
-        print ('DEBUG',MsgBus.callerList)
+        print ('DEBUG',msgbus.callerList)
 
         return
 

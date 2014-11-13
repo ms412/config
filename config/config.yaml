@@ -1,87 +1,47 @@
-# tree format
-Config:
- General:
+
+GENERAL:
  #Allowed LOGMODEs
  # INFO, WARNING, ERROR, CRITICAL, DEBUG
-  LOGMODE: INFO
-#  LOGFILE: ./gpio2mqtt.log
-  LOGFILE: /var/log/gpio2mqtt.log
-  UPDATE: 0.01
+ LOGMODE: INFO
+ LOGFILE: ./gpio2mqtt.log
+ #LOGFILE: /var/log/gpio2mqtt.log
+ UPDATE: 0.01
 
- Broker:
-  MQTT_HOST: localhost
-  MQTT_PORT: 1883
-  #MQTT Subscriber Channel
-  MQTT_SUB_CH: /RASPBERRY01
-  MQTT_PUB_CH: /OPENHAB
+BROKER:
+ MQTT_HOST: localhost
+ MQTT_PORT: 1883
+ #MQTT Subscriber Channel
+ MQTT_SUB_CH: /RASPBERRY01
+ MQTT_PUB_CH: /OPENHAB
 
-
+DEVICES:
  Device1:
-   RASPBERRY_REV: 1
-   I2C_ADDRESS: 0x26
-   TYPE: MCP23017
-   NAME: DEVICE01
+  RASPBERRY_REV: 1
+  I2C_ADDRESS: 0x26
+  TYPE: MCP23017
+  NAME: DEVICE01
 
-   Port0:
-    NAME: GPIO100
-    HWID: 0
-    ON_VALUE: ON
-    OFF_VALUE: OFF
-    MODE: BINARY-IN
+  Port0:
+   NAME: GPIO100
+   HWID: 0
+   ON_VALUE: ON
+   OFF_VALUE: OFF
+   MODE: BINARY-IN
 
-   Port1:
-    NAME: GPIO101
-    HWID: 1
-    ON_VALUE: ON
-    OFF_VALUE: OFF
-    MODE: BINARY-IN
+  Port1:
+   NAME: GPIO101
+   HWID: 1
+   ON_VALUE: ON
+   OFF_VALUE: OFF
+   MODE: BINARY-IN
 
-   Port2:
-    NAME: GPIO102
-    HWID: 2
-    ON_VALUE: ON
-    OFF_VALUE: OFF
-    MODE: TIMER-IN
-
-   Port7:
-    NAME: GPIO107
-    HWID: 7
-    MODE: S0
-    E-FACTOR: 2000
-
-   Port8:
-    NAME: GPIO108
-    HWID: 8
-    ON_VALUE: ON
-    OFF_VALUE: OFF
-    MODE: BINARY-OUT
-    INITIAL: ON
-
-   Port9:
-    NAME: GPIO109
-    HWID: 9
-    ON_VALUE: ON
-    OFF_VALUE: OFF
-    MODE: BINARY-OUT
-
-   Port10:
-    NAME: GPIO110
-    HWID: 10
-    ON_VALUE: ON
-    OFF_VALUE: OFF
-    MODE: TIMER-OUT
-
- Device3:
+  Device3:
    RASPBERRY_REV: 1
    TYPE: RASPBERRY
    NAME: DEVICE02
 
-   Port24:
-    NAME: PWM324
-    HWID: 24
-    MODE: PWM
+  Port24:
+   NAME: PWM324
+   HWID: 24
+   MODE: PWM
 
-   Port25:
-    NAME: PWM325
-    HWID: 25
-    MODE: PWM

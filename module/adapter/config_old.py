@@ -2,15 +2,17 @@
 import yaml
 import json
 
-from library.libtree import tree
+from module.libtree import Tree
 
-class configmodule(object):
+
+
+class Configuration(object):
 
      def __init__(self):
          self._rootPtr = ''
 
      def _create(self,dictCfg):
-         self._rootPtr = tree(dictCfg)
+         self._rootPtr = Tree(dictCfg)
          #elf._rootPtr.set(dictCfg)
          return self._rootPtr
 
@@ -47,7 +49,7 @@ class configmodule(object):
      def select(self,path=None):
          tempPtr = self._rootPtr.select(path)
          print('kkkk',tempPtr)
-         tempObj = tree(tempPtr)
+         tempObj = Tree(tempPtr)
      #    tempObj.set(tempPtr)
          return tempObj
 
@@ -59,7 +61,7 @@ if __name__ == '__main__':
      D = {'A3':{'A11':{'A111':'V111B','B113':'V113B'}},'A2':{'B22':'V22B'}}
      C = {'A1':{'A11':{'A111':''},'A13':''},'A2':{'A21':{'A211':{}}}}
 
-     x = configmodule()
+     x = Configuration()
      r= x.loadDict(A)
      y = x.select('A1')
      print('kk',y)
@@ -74,5 +76,4 @@ if __name__ == '__main__':
      print('Leaf',y.leafPath())
      y.delete(D)
      print('Delete',y.debug())
-
 

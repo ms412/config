@@ -1,15 +1,16 @@
-mport time
+
+import time
 import os
 
 from threading import Thread, Lock
 from queue import Queue
+
 import paho.mqtt.client as mqtt
 
-from module.general.msgbus import MsgBus
-from module.general.dicttree import DictionaryTree
-#import module.library.paho as mqtt
+from library.libmsgbus import msgbus
 
-class mqttClient(Thread,MsgBus):
+
+class mqttClient(Thread,msgbus):
 
     def __init__(self):
         Thread.__init__(self)
@@ -65,7 +66,7 @@ class mqttClient(Thread,MsgBus):
         self.mqttc.on_subscribe = self.on_subscribe
         self.mqttc.on_disconnect = self.on_disconnect
 
-        self.subscribe('NBI', self._on_data)
+        self.msgbus_subscribe('NBI', self._on_data)
 
     def on_connect(self, mqttc, obj, rc):
         print('Mqtt Connected', str(rc))

@@ -1,5 +1,7 @@
 __author__ = 'oper'
 
+import yaml
+
 class DictTreeLib(object):
     '''
     Dictionary Tree Object Library
@@ -7,8 +9,12 @@ class DictTreeLib(object):
     '''
     def __init__(self,tree):
         self.tree = tree
-        print('Tree',tree)
-        print('Kexs',self.tree.keys())
+        print('Debug DictTreeLib Class',self.tree)
+        #print('Kexs',self.tree.keys())
+
+    def printOut(self):
+        print('DictTreeLib PrintOut:',self.tree)
+        return self.tree
 
     def setTree(self,tree):
         '''
@@ -73,10 +79,22 @@ class Tree(DictTreeLib):
         """
         self.config=config
         self.treeRoot = DictTreeLib(self.config)
-        print('Root',self.treeRoot)
+        print('Class Tree print Root tree object',self.treeRoot)
         self.treePointer = self.treeRoot
 
+    def debug(self):
+        print('Output:',yaml.dump(self.treePointer.printOut(),default_flow_style=False))
 
+    def openYaml(self, filename):
+        '''
+        opens a file Yaml and reads the content
+        '''
+        handle = open(filename, 'r')
+        tempCfg = yaml.load(handle,yaml.BaseLoader)
+        handle.close()
+        self.treeRoot = DictTreeLib(tempCfg)
+        self.treePointer = self.treeRoot
+        #print ('Test',self.config)
 
     def list(self):
         return self.treePointer.listNode()
@@ -84,6 +102,9 @@ class Tree(DictTreeLib):
     def listLeafs(self):
         return self.treePointer.listLeafs()
 
+    def test(self,path):
+        help = self.select(path)
+        return self.__class__(help)
     def select(self,path):
         '''
         selects a subtree of the tree
@@ -98,6 +119,7 @@ class Tree(DictTreeLib):
 
 
         self.treePointer = tempobj
+        print('Treepointer',self.treePointer)
         return self.treePointer
 
     def delNode(self,key):
