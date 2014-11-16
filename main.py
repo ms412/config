@@ -31,6 +31,8 @@ from module.adapter.config import configmodule
 from module.adapter.logging import log_adapter
 from module.adapter.broker import mqtt_adapter
 
+from module.manager.vhm import vhm
+
 
 
 class manager(msgbus):
@@ -63,6 +65,12 @@ class manager(msgbus):
         self._broker_thread = mqtt_adapter()
         self._broker_thread.start()
 
+    def start_devices(self):
+        print('Start Devices')
+        self.msgbus_publish('LOG','%s Start VHM Virtual Hardware Manager')
+        self._vhm_thread = vhm()
+        self._vhm_thread.start()
+
     def run(self):
         """
         Entry point, initiates components and loops forever...
@@ -71,7 +79,8 @@ class manager(msgbus):
         self.start_logging()
         self.start_config()
         self.start_borker()
-
+        time.sleep(2)
+        self.start_devices()
         time.sleep(5)
 
         self._cfg_thread.publish()

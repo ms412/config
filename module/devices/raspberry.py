@@ -1,6 +1,5 @@
-from module.general.bitoperation import bitoperation
-from logAdapter import loghandle
-#import RPi.GPIO as GPIO
+from library.libbitoperation import bitoperation
+
 import RPIO as GPIO
 from RPIO import PWM
 
@@ -34,11 +33,11 @@ P1_25    25            DNC
 P1_26    26            SPI_CE1_N    GPIO7
 '''
 
-class Raspberry(object):
+class raspberry(object):
 
     def __init__(self):
         #define log object
-        self._loghandle = loghandle()
+   #     self._loghandle = loghandle()
         self._gpio = GPIO
         self._pwm = PWM.Servo()
         self._pwmState = False

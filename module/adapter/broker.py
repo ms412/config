@@ -38,6 +38,8 @@ class mqtt_adapter(Thread,msgbus):
 
         self.setup()
 
+        self.msgbus_publish('LOG','%s Broker Thread Startup '%('INFO'))
+
         threadRun = True
 
         while threadRun:

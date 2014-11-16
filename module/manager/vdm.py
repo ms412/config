@@ -3,93 +3,154 @@ from threading import Thread, Lock
 from queue import Queue
 import time
 
-from module.general.msgbus import MsgBus
-from module.general.dicttree import DictionaryTree
+from library.libmsgbus import msgbus
+from library.libtree import tree
 
-from module.interface.vpm.binary_out import VPM_BinaryOut
+from module.manager.vpm_binout import vpm_binout
+#from module.manager.vpm_binin inport vpm_binin
 
-from module.hardware.mcp23017 import MCP23017
-from module.hardware.raspberry import Raspberry
+from module.devices.mcp23017 import MCP23017
+#from module.devices.raspberry import Raspberry
 
-class VDM(Thread,MsgBus):
+class vdm(Thread,msgbus):
 
-    def __init__(self, ThreadName):
+    def __init__(self, DevName):
         Thread.__init__(self)
 
-        self.ThreadName = ThreadName
-        self.cfgQ = Queue()
-        self.reqQ = Queue()
-        self.nofyQ = Queue()
+        self._DevName = DevName
 
+        '''
+        queues
+        '''
+        self.cfgQ = Queue()
+        self.notify_vdmQ = Queue()
+        self.req_vdmQ = Queue()
+
+        '''
+        mandatory VDM data
+        '''
         self._THREAD_UPDATE = 0.1
         self._DEVICE_TYPE = ''
         self._DEVICE_NAME = ''
 
-        self.VDMcfg = ''
         self._VPMInstance = []
 
-        print ('VDM init', self.ThreadName)
+        '''
+        contains all active VPM instances managed by thread
+        '''
+        self._VPMobj = {}
 
-        self.Setup()
+
+        self.setup()
+
+    def setup(self):
+
+        self.msgbus_subscribe('VDM_CONF', self._on_cfg)
+        self.msgbus_subscribe('VPM_REQUEST', self._on_vdm_request)
+        self.msgbus_subscribe('VHM_NOTIFY', self._on_vpm_notify)
 
     def run(self):
-        time.sleep(2)
-        while(True):
+
+        """
+
+        :type self: object
+        """
+        self.msgbus_publish('LOG','%s VDM Virtual Device Manager %s Startup'%('INFO', self._DevName))
+        threadRun = True
+
+        while threadRun:
             time.sleep(1)
-            print('#',self.ThreadName)
-            '''
-            are configurations pending in the queue
-            '''
-            if not self.cfgQ.empty():
-                '''
-                configurations are concerning this thread
-                '''
-                print('cfgQ is not empty')
-                dataQ = self.cfgQ.get()
-                print('DataQ',dataQ)
-                threadCfg = dataQ.get(self.ThreadName,None)
-                print('thread config available',self.ThreadName,threadCfg)
-                if threadCfg:
-                    '''
-                    configuration is concerning this thread
-                    make local config
-                    and distribut config to Virtual Port Manager
-                    '''
-                    VDMcfg = DictionaryTree(threadCfg)
-                    self._VDMConfig(VDMcfg.GetLeafs())
-                    self._VPMcfg(VDMcfg.GetNodes())
+            print('VDM loop Device ',self._DevName)
 
-            '''
-            are request pending in the queue
-            '''
-            if not self.reqQ.empty():
-                '''
-                request is concerning this thread
-                '''
-                threadReq = self.reqQ.get(self.ThreadName,None)
-                if threadReq:
-                    '''
-                    request is concerning this thread
-                    send forward to Virtual Port Manager
-                    '''
-                    VPMreq = DictionaryTree(threadReq())
-                    self._VPMreq(VPMreq.GetNodes())
+            while not self.cfgQ.empty():
+                self.on_cfg(self.cfgQ.get())
 
 
 
+    def on_cfg(self,cfg_msg):
 
+        device = cfg_msg.select(self._DevName)
+        self.msgbus_publish('LOG','%s VDM Configuration Update for Device: %s received %s '%('INFO', self._DevName, device.getTree()))
+        print('getNodes',device.getNodesKey())
 
-
-
-    def Setup(self):
         '''
-        Subscribe to Notification Channels
+        mandatory configurations
         '''
-        self.subscribe('VDM_CFG', self.ConfigIF)
-        self.subscribe('VDM_REQ', self.RequestIF)
-    #    self.subscribe('VDM_NOFY', self.NotifyIF)
+        self._DEVICE_TYPE = str(device.getNode('TYPE','RASPBERRY'))
+        self._THREAD_UPDATE = float(device.getNode('UPDATE',0.1))
 
-        print('VDM Setup Completed')
+        if 'MCP23017' in self._DEVICE_TYPE:
+            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s'%('INFO', self._DEVICE_TYPE))
+            self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
+            self._I2C_ADDRESS = int(device.getNode('I2C_ADDRESS'),16)
+            self._hwHandle = MCP23017(self._SYSTEM_TYPE,self._I2C_ADDRESS)
+
+        elif 'RASPBERRY' in self._DEVICE_TYPE:
+            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s'%('INFO', self._DEVICE_TYPE))
+            self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
+#            self._hwHandle = raspberry()
+
+
+        '''
+        compare running VPM devices with configured devices
+        '''
+        cfg_device = set(device.getNodesKey())
+        run_device = set(self._VPMobj.keys())
+        '''
+        list devices of VPM to be started
+        '''
+        self.start_vpm(list(cfg_device.difference(run_device)),device)
+        '''
+        list devices of VPM to be stopped
+        '''
+        self.stop_vpm(list(run_device.difference(cfg_device)))
+        '''
+        VPM devices to be configured
+        '''
+        self.cfg_vpm(device)
+
+
+
+
+
+    def _on_cfg(self,cfg_msg):
+        '''
+        Called from message bus and saves message into queue
+        :param cfg_msg: configuration message
+        :return: none
+        '''
+        self.cfgQ.put(cfg_msg)
+        return
+
+    def _on_vpm_notify(self,notify):
+        self.notify_vdmQ.put(notify)
+        return
+
+    def _on_vdm_request(self,req):
+        self.req_vdmQ.put(req)
+        return
+
+    def start_vpm(self,device,cfg_msg):
+        self.msgbus_publish('LOG','%s VDM Start VPM devices: %s '%('INFO', device))
+        for item in device:
+            port_cfg = cfg_msg.select(item)
+            self._SYSTEM_TYPE = str(port_cfg.getNode('MODE'))
+
+            if 'BINARY-OUT' in self._SYSTEM_TYPE:
+                self._VPMInstance[item](vpm_binout(port_cfg,self._hwHandle))
+
+            elif 'BINARY-IN' in self._SYSTEM_TYPE:
+                self._VPMInstance[item](vpm_binin(port_cfg,self._hwHandle))
+
+        return
+
+    def stop_vpm(self,device):
+        self.msgbus_publish('LOG','%s VDM Stop VPM devices %s '%('INFO', device))
+        return
+
+    def cfg_vpm(self,device):
+        self.msgbus_publish('LOG','%s VDM Configuration VPM devices: %s '%('INFO', device))
+        return
 
     def ConfigIF(self,msg):
         '''

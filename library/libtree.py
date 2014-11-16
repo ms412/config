@@ -35,6 +35,13 @@ class tree(object):
      def getRoot(self):
          return self._treeObj
 
+     def getNodesKey(self):
+         nodekeylist = []
+         for k,v in self._treeObj.items():
+             if isinstance(v,dict):
+                 nodekeylist.append(k)
+         return nodekeylist
+
      def getNodes(self):
          nodelist = []
          for k,v in self._treeObj.items():

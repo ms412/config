@@ -3,19 +3,19 @@ Created on Feb 16, 2014
 
 @author: tgdscm41
 '''
-from module.hardware.i2cAdapter import i2c
+from library.libi2c import i2c
 #from library.general.logAdapter import loghandle
-from module.general.bitoperation import bitoperation
+from library.libbitoperation import bitoperation
 
 
 class MCP23017(object):
 
     def __init__(self,RaspberryRev = 1,i2cAddr = 0x20):
 
-        self._loghandle = loghandle()
+#        self._loghandle = loghandle()
 
   #      self._loghandle.info('mcp23017Driver::init, Object created: Version: %s, Date: %s',__VERSION__,__DATE__)
-        self._loghandle.debug('Start MCP23017 Driver Raspberry Rev. %s, i2c Address: %s', RaspberryRev,i2cAddr)
+   #     self._loghandle.debug('Start MCP23017 Driver Raspberry Rev. %s, i2c Address: %s', RaspberryRev,i2cAddr)
 
         self._i2cAdd = i2cAddr
         #Create i2c Object
@@ -53,7 +53,7 @@ class MCP23017(object):
     def Reset (self):
         """ Setup device register to default values
         """
-        self._loghandle.debug('mcp23017Driver::Reset, prepare initial setup of device')
+   #     self._loghandle.debug('mcp23017Driver::Reset, prepare initial setup of device')
 
         print("reset")
         self._i2c.Write(self._i2cAdd,self._IODIRA,0xFF)
@@ -79,7 +79,7 @@ class MCP23017(object):
             ioPin = pin 0...15 as integer
             iodir = 0 output / 1 input
         """
-        self._loghandle.debug('mcp23017Driver::ConfigIO, ioPin-number: %d Direction: %s",ioPin,iodir')
+    #    self._loghandle.debug('mcp23017Driver::ConfigIO, ioPin-number: %d Direction: %s",ioPin,iodir')
 
         if ioPin <= 7:
             temp = self._i2c.Read(self._i2cAdd,self._IODIRA)

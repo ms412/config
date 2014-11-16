@@ -1,27 +1,25 @@
-
-
 import time
-
-#from threading import Thread, Lock
+from threading import Thread
 from queue import Queue
 
 from library.libmsgbus import msgbus
-from library.libtree import tree
-from module.adapter.config import configmodule
+from module.manager.vdm import vdm
 
-from module.interface.vdm import VDM
 
-class VHM(msgbus):
+class vhm(Thread,msgbus):
 
     def __init__(self):
+        Thread.__init__(self)
       #  Thread.__init__(self)
 
         self.cfg_queue = Queue()
 
         self.req_vhm_queue = Queue()
         self.notify_vdm_queue = Queue()
-
-        self.threadList = {}
+        '''
+        contains all running VDM threads
+        '''
+        self._threadDict = {}
 
         self.msgObj = 0
 
@@ -37,7 +35,9 @@ class VHM(msgbus):
     def run(self):
 
         print ('run VHM')
-        self.setup()
+
+        self.msgbus_publish('LOG','%s VHM Virtual Hardware Manager Startup '%('INFO'))
+
 
         threadRun = True
 
@@ -57,15 +57,64 @@ class VHM(msgbus):
         return
 
     def _on_cfg(self,cfg_msg):
+        '''
+        Called from message bus and saves message into queue
+        :param cfg_msg: configuration message
+        :return: none
+        '''
         self.cfg_queue.put(cfg_msg)
         return
 
-    def on_cfg(self,msg):
+    def on_cfg(self,cfg_msg):
        # print('Config message',cfg_msg)
         devices = cfg_msg.select('DEVICES')
-        self.msgbus_publish('LOG','%s VHM Configuration %s '%('INFO', devices.getTree()))
-        for item in devices.getNodes():
-            self.msgbus_publish('VDM_REQUEST',item)
+        self.msgbus_publish('LOG','%s VHM Configuration Update received %s '%('INFO', devices.getTree()))
+        print('getNodes',devices.getNodesKey())
+        '''
+        compare running devices with configured devices
+        '''
+        cfg_devices = set(devices.getNodesKey())
+        run_devices = set(self._threadDict.keys())
+        '''
+        list devices to be started
+        '''
+        self.start_vdm(list(cfg_devices.difference(run_devices)))
+        '''
+        list devices to be stopped
+        '''
+        self.stop_vdm(list(run_devices.difference(cfg_devices)))
+        '''
+        devices to be configured
+        '''
+        self.cfg_vdm(devices)
+
+        return
+
+    def start_vdm(self,devices):
+
+        for item in devices:
+            threadObj = vdm(item)
+            threadObj.start()
+            self._threadDict[item]=threadObj
+
+        return
+
+    def stop_vdm(self,devices):
+
+        for item in devices:
+            threadObj = self._threadList[item]
+            threadObj.stop()
+
+        return
+
+    def cfg_vdm(self,devices):
+        print('devices list',devices)
+
+        self.msgbus_publish('VDM_CONF',devices)
+
+       # for item in devices:
+       #     self.msgbus_publish('VDM_CONF',item)
+
         return
 
     def _on_vhm_request(self,req):
