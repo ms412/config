@@ -29,8 +29,8 @@ class vhm(Thread,msgbus):
     def setup(self):
 
         self.msgbus_subscribe('CONF', self._on_cfg)
-        self.msgbus_subscribe('VHM_REQUEST', self._on_vhm_request)
-        self.msgbus_subscribe('VDM_NOTIFY', self._on_vdm_notify)
+        self.msgbus_subscribe('REQ_MSG', self._on_vhm_request)
+        self.msgbus_subscribe('NOTIFY_VHM', self._on_vdm_notify)
 
     def run(self):
 
@@ -68,6 +68,7 @@ class vhm(Thread,msgbus):
     def on_cfg(self,cfg_msg):
        # print('Config message',cfg_msg)
         devices = cfg_msg.select('DEVICES')
+        print('#####',devices)
         self.msgbus_publish('LOG','%s VHM Configuration Update received %s '%('INFO', devices.getTree()))
         print('getNodes',devices.getNodesKey())
         '''
@@ -92,10 +93,10 @@ class vhm(Thread,msgbus):
 
     def start_vdm(self,devices):
 
-        for item in devices:
-            threadObj = vdm(item)
+        for device in devices:
+            threadObj = vdm(device)
             threadObj.start()
-            self._threadDict[item]=threadObj
+            self._threadDict[device]=threadObj
 
         return
 
@@ -110,7 +111,7 @@ class vhm(Thread,msgbus):
     def cfg_vdm(self,devices):
         print('devices list',devices)
 
-        self.msgbus_publish('VDM_CONF',devices)
+        self.msgbus_publish('CFG',devices)
 
        # for item in devices:
        #     self.msgbus_publish('VDM_CONF',item)
