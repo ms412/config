@@ -8,11 +8,12 @@ GENERAL:
  UPDATE: 0.01
 
 BROKER:
- HOST: iot.eclipse.org
+ HOST: localhost
  PORT: 1883
- #MQTT Subscriber Channel
- SUBSCRIBE: $SYS/#
+ #MQTT Channels
+ SUBSCRIBE: /SYS
  PUBLISH: /OPENHAB
+ CONFIG: /CONFIG
 
 DEVICES:
  DEVICE1:

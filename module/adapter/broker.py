@@ -5,7 +5,13 @@ import os
 from threading import Thread, Lock
 from queue import Queue
 
-import paho.mqtt.client as mqtt
+#import paho.mqtt.client as mqtt
+
+try:
+    import paho.mqtt.client as mqtt
+except:
+    import paho as mqtt
+    print ('start local mqtt driver')
 
 from library.libmsgbus import msgbus
 
@@ -26,154 +32,194 @@ class mqtt_adapter(Thread,msgbus):
 
         self.mqttRxQu = Queue()
 
-        self.mqttc = ''
-
+        '''
+        creaste mqtt object
+        '''
+        self._mqttc = mqtt.Client(str(os.getpid()))
 
         self._host = str('iot.eclipse.org')
         self._port = int(1883)
-        self._subscribe = str('$SYS/#')
-        self._publish = str('/OPENHAB02')
+        self._subscribe = []
+      #  self._subscribe = str('/RECEIVER')
+        self._publish = ''
+        self._config = ''
+
+        self._connectState = False
+
+
+
+
 
     def run(self):
 
         self.setup()
-
+        #self.connect()
         self.msgbus_publish('LOG','%s Broker Thread Startup '%('INFO'))
 
         threadRun = True
 
         while threadRun:
 
-            time.sleep(2)
-            print('logging mqtt')
+          #  time.sleep(2)
+
 
             while not self.cfg_queue.empty():
                 self.on_cfg(self.cfg_queue.get())
 
+            while not self.dataTxQueue.empty():
+                temp = self.dataTxQueue.get()
+                self.publish(str(temp.get('MESSAGE',None)))
+            print('mqtt loop', self._connectState)
+
+            if self._connectState:
+                self.publish('The quick brown fox jumps over the lazy dog')
+
+            time.sleep(2)
       #      self.mqttc.loop()
         return
 
 
     def setup(self):
         print ('Setup mqtt')
+
+        '''
+        create mqtt session
+        '''
+        #self.create()
+        self._mqttc = mqtt.Client(str(os.getpid()))
+
+        '''
+        setup callbacks
+        '''
+        self._mqttc.on_message = self.on_message
+        self._mqttc.on_connect = self.on_connect
+        self._mqttc.on_publish = self.on_publish
+        self._mqttc.on_subscribe = self.on_subscribe
+        self._mqttc.on_disconnect = self.on_disconnect
+
+        print('Broker init')
+        '''
+        setup message pipes
+        '''
         self.msgbus_subscribe('CONF', self._on_cfg)
-        self.msgbus_subscribe('NBI', self._on_data)
+        self.msgbus_subscribe('DATA',self._on_data)
+#        self.msgbus_subscribe('NBI', self._on_data)
         return
 
-    def cfg_update(self):
 
-        print('mqtt config update')
-        self.msgbus_publish('LOG','%s Broker Configuration Update '%('INFO'))
-
-        self.mqttc = mqtt.Client(str(os.getpid()))
-
-        self.mqttc.connect(self._host, self._port, 60)
-        self.mqttc.subscribe(self._subscribe, 0)
-
-        self.mqttc.on_message = self.on_message
-        self.mqttc.on_connect = self.on_connect
-        self.mqttc.on_publish = self.on_publish
-        self.mqttc.on_subscribe = self.on_subscribe
-        self.mqttc.on_disconnect = self.on_disconnect
-
-        return
 
 
     def _on_cfg(self,cfg_msg):
+        print('mqtt config data arived')
         self.cfg_queue.put(cfg_msg)
+        return
+
+    def _on_data(self,msg):
+        self.dataTxQueue.put(msg)
         return
 
     def on_cfg(self,cfg_msg):
 
+        print('broker configuratio update on_cfg')
         broker = cfg_msg.select('BROKER')
-        self.msgbus_publish('LOG','%s Broker Configuration %s '%('INFO', broker.getTree()))
+        self.msgbus_publish('LOG','%s Broker Received new configuration %s '%('INFO', broker.getTree()))
 
-        self._host = str(broker.getNode('HOST','iot.eclipse.org'))
+        self._host = str(broker.getNode('HOST','localhost'))
         self._port = int(broker.getNode('PORT',1883))
-        self._subscribe = str(broker.getNode('SUBSCRIBE_CH','$SYS/#'))
-        self._publish = str(broker.getNode('PUBLISH_CH','/OPENHAB02'))
+        self._subscribe.append(str(broker.getNode('SUBSCRIBE','/RECEIVER')))
+        self._subscribe.append(str(broker.getNode('CONFIG','/CONFIG')))
+        self._publish = str(broker.getNode('PUBLISH','/NOTIFY'))
 
-        self.cfg_update()
+      #  self.disconnect()
+       # self.reinitialise()
+        self.connect()
+        self.subscribe()
+
         return
 
-    def on_connect(self, mqttc, obj, rc):
-        print('Mqtt Connected', str(rc))
-        self.msgbus_publish('LOG','%s Connected to MQTT Broker'%('INFO'))
+    def on_connect(self, client, userdata, flags, rc):
+        print('MQTT: connect to host:', self._host,str(rc))
+        self._connectState = True
 
-    def on_disconnect(self, rc):
+        self.msgbus_publish('LOG','%s Broker: Connected %s'%('INFO', self._connectState))
+
+        return True
+
+    def on_disconnect(self, client, userdata, rc):
         print('Mqtt Disconnect', rc)
-        self.msgbus_publish('LOG','%s Lost Connection to MQTT Broker'%('INFO'))
-        self.mqttc.connect(self.host, self.port, 60)
+        self._connectState = False
+        if rc != 0:
+            conn_state = 'Unexpected'
+            self.msgbus_publish('LOG','%s Broker: Lost Connection to MQTT:%s '%('INFO',conn_state))
+            self.mqttc.connect(self.host, self.port, 60)
+
         return 0
 
-    def on_message(self, mqttc, obj, msg):
+    def on_message(self, client, userdata, msg):
         print('Mqtt received: ',msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
         resultDict ={}
 
         list_topic = msg.topic.split("/")
         resultDict.update({'DEVICE_NAME':list_topic[-2]})
         resultDict.update({'PORT_NAME':list_topic[-1]})
-        resultDict.update({'PORT_STATE':msg.payload})
+        resultDict.update({'MESSAGE':msg.payload})
 
+        #print ('device name', resultDict['DEVICE_NAME'],'Port name:', resultDict['PORT_NAME'],'message', resultDict['MESSAGE'])
+        self.msgbus_publish('LOG','%s Broker: received Date Device: %s , Port: %s , Message: %s'%('INFO',resultDict['DEVICE_NAME'], resultDict['PORT_NAME'], resultDict['MESSAGE']))
  #       self.mqttRxQu.put(resultDict)
  #       self.publish('NBI','test')
-        self.msgBus_publish('NBI',resultDict)
+        self.msgbus_publish('DATA',resultDict)
         return 0
 
-    def on_publish(self, mqttc, obj, mid):
-        print("Mqtt published "+str(mid))
+    def on_publish(self, client, userdata, mid):
+        print('MQTT on_published '+str(mid))
         return 0
 
-    def on_subscribe(self, mqttc, obj, mid, granted_qos):
-        print("Subscribed: "+str(mid)+" "+str(granted_qos))
+    def on_subscribe(self, client, userdata, mid, granted_qos):
+        print('MQTT: Subscribed: '+str(mid)+' '+str(granted_qos))
         return 0
 
-    def mqtt_send(self,msgDict):
-        self._sendQueue.put(msgDict)
+    def create(self):
+        print('mqtt create mqtt object')
+        self._mqttc = mqtt.Client(str(os.getpid()))
+        return True
 
-    def mqtt_publish(self,msg,channel=None):
+    def reinitialise(self):
+        print('mqtt reinitialise')
+        self._mqttc.reinitialise(str(os.getpid()), clean_session=True)
+        return True
 
-        if channel is None:
-            channel = self._mqtt_pub_ch
+    def connect(self):
+        print ('Conn3ect')
+        #self._mqttc.connect('localhost')
 
-        channel = str(self._mqtt_pub_ch +'/' + channel)
+        self._mqttc.connect(self._host, self._port,60)
+        self._mqttc.loop_start()
+        return True
 
-        self._loghandle.info('MqttWrapper::Publish to Channel: %s Message: %s',channel, msg)
-        self._mqttc.publish(channel, msg)
+    def disconnect(self):
+        print('dissconnect')
+        self._mqttc.disconnect()
+
+    def subscribe(self,channel = None):
+        if not channel:
+            for item in self._subscribe:
+                self._mqttc.subscribe(item + str('/#'),0)
+                print('mqtt subscribe',item)
+
+        else:
+            print('mqtt subscribe by commandline',channel)
+            self._mqttc.subscribe(channel,0)
 
         return True
 
 
-
-    def on_config(self,message):
-
-   #     print ('Receive mqtt config',message)
-
-        item = message.get('BROKER',None)
-        if None not in item:
-            print ('Write in mqtt Queue')
-            self.cfgQueue.put(item)
-
-       # print ('BROKER message',item)
-
-        return
-
-    def on_dataRx(self,message):
+    def publish(self,message):
+        print('Publish:',message)
+        self._mqttc.publish(self._publish, message, 0)
 
 
-        self.msgObj = self.dataRxQueue.get_nowait()
-        self.publish('DATA_TX',self.msgObj)
 
-        return
 
-    def on_dataTx(self,message):
 
-        item = message.get('DEVICES',None)
-        if None not in item:
-            print ('Write in mqtt DataTx Queue')
-            self.dataTxQueue.put(item)
-        return
-
-    def _on_data(self,msg):
-        print ('her',msg)
 

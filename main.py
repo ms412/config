@@ -78,14 +78,15 @@ class manager(msgbus):
 
         self.start_logging()
         self.start_config()
+        self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
         self.start_borker()
         time.sleep(2)
-        self.start_devices()
-        time.sleep(5)
+       # self.start_devices()
+       # time.sleep(5)
 
         self._cfg_thread.publish()
 
-        self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
+
       #  self.start_borker()
 
 
