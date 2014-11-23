@@ -30,6 +30,7 @@ from library.libmsgbus import msgbus
 from module.adapter.config import configmodule
 from module.adapter.logging import log_adapter
 from module.adapter.broker import mqtt_adapter
+from module.adapter.message import messagebroker
 
 from module.manager.vhm import vhm
 
@@ -45,6 +46,7 @@ class manager(msgbus):
         self._cfg_general_handle = None
         self._cfg_broker_handle = None
         self._cfg_device_hanlde = None
+        self._msgbroker = None
 
         self._log_handle = None
 
@@ -65,6 +67,11 @@ class manager(msgbus):
         self._broker_thread = mqtt_adapter()
         self._broker_thread.start()
 
+    def start_msgbroker(self):
+        print('Start Message Broker')
+        self._msgbroker = messagebroker()
+
+
     def start_devices(self):
         print('Start Devices')
         self.msgbus_publish('LOG','%s Start VHM Virtual Hardware Manager')
@@ -78,13 +85,19 @@ class manager(msgbus):
 
         self.start_logging()
         self.start_config()
+        self.start_msgbroker()
         self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
         self.start_borker()
         time.sleep(2)
+        #self._msgbroker.run()
        # self.start_devices()
        # time.sleep(5)
 
         self._cfg_thread.publish()
+
+        while True:
+            self._msgbroker.run()
+            time.sleep(2)
 
 
       #  self.start_borker()

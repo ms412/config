@@ -126,9 +126,12 @@ class mqtt_adapter(Thread,msgbus):
 
         self._host = str(broker.getNode('HOST','localhost'))
         self._port = int(broker.getNode('PORT',1883))
-        self._subscribe.append(str(broker.getNode('SUBSCRIBE','/RECEIVER')))
-        self._subscribe.append(str(broker.getNode('CONFIG','/CONFIG')))
-        self._publish = str(broker.getNode('PUBLISH','/NOTIFY'))
+        temp = str(broker.getNode('SUBSCRIBE','/SUBSCRIBE'))
+        self._subscribe = temp.split(",")
+       # self._subscribe.append(str(broker.getNode('CONFIG','/CONFIG')))
+        self._publish = str(broker.getNode('PUBLISH','/PUBLISH'))
+
+
 
       #  self.disconnect()
        # self.reinitialise()
@@ -168,7 +171,7 @@ class mqtt_adapter(Thread,msgbus):
         self.msgbus_publish('LOG','%s Broker: received Date Device: %s , Port: %s , Message: %s'%('INFO',resultDict['DEVICE_NAME'], resultDict['PORT_NAME'], resultDict['MESSAGE']))
  #       self.mqttRxQu.put(resultDict)
  #       self.publish('NBI','test')
-        self.msgbus_publish('DATA',resultDict)
+        self.msgbus_publish('DATA_RX',msg)
         return 0
 
     def on_publish(self, client, userdata, mid):

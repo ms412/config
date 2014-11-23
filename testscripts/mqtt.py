@@ -1,5 +1,6 @@
 import os
 import time
+import json
 
 try:
     import paho.mqtt.client as mqtt
@@ -75,13 +76,16 @@ class mqttclient(object):
 
 
 if __name__ == '__main__':
+    MSG = [{'MESSAGE':{'TYPE':'CONFIG','MODE':'TEST'},'BROKER':{'HOST':'localhost','PORT':1883}}]
+
+    msgStr = json.dumps(MSG)
 
     broker = mqttclient()
-    broker.setpubchannel('/SYS')
+    broker.setpubchannel('/TEST')
     broker.setsubchannel('/RECEIVER')
     broker.connect()
     broker.subscribe()
-    broker.publish('The quick brown fox jumps over the lazy dog')
+    broker.publish(msgStr)
 
     rc= 0
     while rc == 0:

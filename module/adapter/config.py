@@ -2,6 +2,8 @@
 import yaml
 import json
 import time
+from queue import Queue
+
 from threading import Thread, Lock
 
 from library.libtree import tree
@@ -13,6 +15,13 @@ class configmodule(Thread,msgbus):
          Thread.__init__(self)
          self._rootPtr = ''
          self.cfg_file = cfg_file
+
+         '''
+         Setup message Queues
+         '''
+         self.msg_queue = Queue()
+
+
 
      def run(self):
 
@@ -27,11 +36,29 @@ class configmodule(Thread,msgbus):
             print('config loop')
             self.msgbus_publish('LOG','%s Configuration loop '%('WARNING'))
 
-        return
+            while not self.msg_queue.empty():
+                self.on_msg(self.msg_queue.get())
+
+        return True
+
+     def _on_msg(self,msg):
+        self.msg_queue.put(msg)
+        return True
+
+     def on_msg(self,msg):
+         print('CONFIG message received',msg)
+         return True
 
      def setup(self,filename):
          x = self.loadFile(filename)
          self.msgbus_publish('CONF',x)
+
+         ''''
+         setup message pipes
+         '''
+         self.msgbus_subscribe('CONF_MSG', self._on_msg)
+
+         return True
 
      def _create(self,dictCfg):
          self._rootPtr = tree(dictCfg)

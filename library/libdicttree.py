@@ -1,6 +1,7 @@
 __author__ = 'oper'
 
 import yaml
+import json
 
 class DictTreeLib(object):
     '''
@@ -95,6 +96,13 @@ class Tree(DictTreeLib):
         self.treeRoot = DictTreeLib(tempCfg)
         self.treePointer = self.treeRoot
         #print ('Test',self.config)
+
+    def loadJson(self,jsonstr):
+
+        jdata = json.loads(jsonstr)
+        self.treeRoot = DictTreeLib(jdata)
+        self.treePointer = self.treeRoot
+        return True
 
     def list(self):
         return self.treePointer.listNode()
