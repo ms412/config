@@ -154,7 +154,7 @@ class mqtt_adapter(Thread,msgbus):
         if rc != 0:
             conn_state = 'Unexpected'
             self.msgbus_publish('LOG','%s Broker: Lost Connection to MQTT:%s '%('INFO',conn_state))
-            self.mqttc.connect(self.host, self.port, 60)
+            self._mqttc.connect(self._host, self._port, 60)
 
         return 0
 

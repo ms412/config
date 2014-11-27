@@ -65,6 +65,9 @@ class log_adapter(Thread, msgbus):
         elif logmsg.startswith('CRITICAL'):
             msg = logmsg.replace('CRITICAL','')
             self.critical(msg.strip())
+        elif logmsg.startswith('TRACE'):
+            msg = logmsg.replace('TRACE','')
+            self.info(msg.strip())
         else:
             self.info(logmsg.strip())
 

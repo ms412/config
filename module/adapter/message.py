@@ -1,12 +1,12 @@
 
 import json
 
+from threading import Thread, Lock
 from queue import Queue
-
 from library.libmsgbus import msgbus
 
 
-class messagebroker(msgbus):
+class msgbroker(Thread,msgbus):
 
     def __init__(self):
 

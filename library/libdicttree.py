@@ -17,6 +17,9 @@ class DictTreeLib(object):
         print('DictTreeLib PrintOut:',self.tree)
         return self.tree
 
+    def getTree(self):
+        return self.tree
+
     def setTree(self,tree):
         '''
         set an new tree

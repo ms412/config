@@ -76,7 +76,7 @@ class mqttclient(object):
 
 
 if __name__ == '__main__':
-    MSG = [{'MESSAGE':{'TYPE':'CONFIG','MODE':'TEST'},'BROKER':{'HOST':'localhost','PORT':1883}}]
+    MSG = [{'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'BROKER':{'HOST':'localhost','PORT':1883}}]
 
     msgStr = json.dumps(MSG)
 

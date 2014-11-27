@@ -61,9 +61,12 @@ class manager(msgbus):
         self._log_thread = log_adapter()
         self._log_thread.start()
 
-    def start_borker(self):
-        print('Start Broker')
+    #def start_borker(self):
+    def start_msgbroker(self):
+        print('Start Message Broker')
        # self.msgbus_publish('LOG','%s Start MQTT broker'%('INFO'))
+        self._msgborker = msgbroker()
+
         self._broker_thread = mqtt_adapter()
         self._broker_thread.start()
 
@@ -86,8 +89,9 @@ class manager(msgbus):
         self.start_logging()
         self.start_config()
         self.start_msgbroker()
+      #  self.start_msgbroker()
         self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
-        self.start_borker()
+       # self.start_borker()
         time.sleep(2)
         #self._msgbroker.run()
        # self.start_devices()

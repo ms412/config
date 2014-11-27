@@ -11,7 +11,7 @@ from library.libmsgbus import msgbus
 
 class configmodule(Thread,msgbus):
 
-     def __init__(self,cfg_file):
+     def __init__(self,cfg_file=None):
          Thread.__init__(self)
          self._rootPtr = ''
          self.cfg_file = cfg_file
@@ -20,7 +20,9 @@ class configmodule(Thread,msgbus):
          Setup message Queues
          '''
          self.msg_queue = Queue()
-
+         self.add_queue = Queue()
+         self.del_queue = Queue()
+         self.new_queue = Queue()
 
 
      def run(self):
@@ -39,28 +41,67 @@ class configmodule(Thread,msgbus):
             while not self.msg_queue.empty():
                 self.on_msg(self.msg_queue.get())
 
+            while not self.add_queue.empty():
+                self.on_add(self.add_queue.get())
+
         return True
 
      def _on_msg(self,msg):
         self.msg_queue.put(msg)
         return True
 
+     def _on_add(self,msg):
+         self.add_queue.put(msg)
+         return True
+
+     def _on_del(self,msg):
+         self.del_queue.put(msg)
+         return True
+
+     def _on_new(self,msg):
+         self.new_queue.put(msg)
+         return True
+
      def on_msg(self,msg):
          print('CONFIG message received',msg)
          return True
 
+     def on_add(self,msg):
+         self.msgbus_publish('LOG','%s CONFIG: ADD Message received %s'%('TRACE',msg))
+         self._rootPtr.merge(msg)
+         self.saveFile('TEST')
+         self.publishUpdate(self._rootPtr)
+         return True
+
+     def on_del(self,msg):
+         self.msgbus_publish('LOG','%s CONFIG: DEL Message received %s'%('TRACE',msg))
+         self._rootPtr.delte(msg)
+         self.saveFile('TEST')
+         self.publishUpdate(self._rootPtr)
+         return True
+
      def setup(self,filename):
-         x = self.loadFile(filename)
-         self.msgbus_publish('CONF',x)
+         if self.cfg_file:
+            cfg_tree = self.loadFile(filename)
+            self.publishUpdate(cfg_tree)
+            #self.msgbus_publish('CONF',x)
 
          ''''
          setup message pipes
          '''
-         self.msgbus_subscribe('CONF_MSG', self._on_msg)
+         self.msgbus_subscribe('CFG_ADD',self._on_add)
+         self.msgbus_subscribe('CFG_DEL',self._on_del)
+         self.msgbus_subscribe('CFG_NEW',self._on_new)
+    #     self.msgbus_subscribe('CONF_MSG', self._on_msg)
 
          return True
 
-     def _create(self,dictCfg):
+     def publishUpdate(self,cfg_tree):
+         self.msgbus_publish('LOG','%s CONFIG: Publish new configuration %s'%('TRACE',cfg_tree.getTree()))
+         self.msgbus_publish('CONF',cfg_tree)
+         return True
+
+     def createTree(self,dictCfg):
          self._rootPtr = tree(dictCfg)
          #elf._rootPtr.set(dictCfg)
          return self._rootPtr
@@ -84,14 +125,14 @@ class configmodule(Thread,msgbus):
          handle = open(filename,'r')
          dictCfg = yaml.load(handle,yaml.BaseLoader)
          handle.close()
-         return self._create(dictCfg)
+         return self.createTree(dictCfg)
 
      def saveFile(self, filename):
          '''
          saves the tree and saves it as a Yaml file
          '''
          handle = open(filename,"w")
-         yaml.dump(self._rootPtr.gettree(), handle)
+         yaml.dump(self._rootPtr.getTree(), handle)
          handle.close()
          return
 
@@ -101,7 +142,7 @@ class configmodule(Thread,msgbus):
 
      def select(self,path=None):
          tempPtr = self._rootPtr.select(path)
-         print('kkkk',tempPtr)
+      #   print('kkkk',tempPtr)
          tempObj = tree(tempPtr)
      #    tempObj.set(tempPtr)
          return tempObj
