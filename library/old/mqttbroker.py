@@ -16,7 +16,7 @@ except:
 from library.libmsgbus import msgbus
 
 
-class mqtt_adapter(Thread,msgbus):
+class mqttbroker(Thread,msgbus):
 
     def __init__(self):
         Thread.__init__(self)
@@ -62,13 +62,20 @@ class mqtt_adapter(Thread,msgbus):
 
           #  time.sleep(2)
 
-
+            '''
+            Config Queue
+            '''
             while not self.cfg_queue.empty():
+                print('#############MQTTT:Config received')
                 self.on_cfg(self.cfg_queue.get())
 
+            '''
+            Receive Message from Queue send to broker
+            '''
             while not self.dataTxQueue.empty():
                 temp = self.dataTxQueue.get()
-                self.publish(str(temp.get('MESSAGE',None)))
+                self.publish(temp)
+               # self.publish(str(temp.get('MESSAGE',None)))
             print('mqtt loop', self._connectState)
 
             if self._connectState:
@@ -101,10 +108,12 @@ class mqtt_adapter(Thread,msgbus):
         '''
         setup message pipes
         '''
-        self.msgbus_subscribe('CONF', self._on_cfg)
-        self.msgbus_subscribe('DATA',self._on_data)
+        self.msgbus_subscribe('CONFIG', self._on_cfg)
+        self.msgbus_subscribe('MSG_TX',self._on_data)
 #        self.msgbus_subscribe('NBI', self._on_data)
-        return
+
+
+        return True
 
 
 
@@ -171,7 +180,7 @@ class mqtt_adapter(Thread,msgbus):
         self.msgbus_publish('LOG','%s Broker: received Date Device: %s , Port: %s , Message: %s'%('INFO',resultDict['DEVICE_NAME'], resultDict['PORT_NAME'], resultDict['MESSAGE']))
  #       self.mqttRxQu.put(resultDict)
  #       self.publish('NBI','test')
-        self.msgbus_publish('DATA_RX',msg)
+        self.msgbus_publish('MSG_RX',msg)
         return 0
 
     def on_publish(self, client, userdata, mid):
@@ -219,7 +228,8 @@ class mqtt_adapter(Thread,msgbus):
 
     def publish(self,message):
         print('Publish:',message)
-        self._mqttc.publish(self._publish, message, 0)
+        self._mqttc.publish(message)
+     #   self._mqttc.publish(self._publish, message, 0)
 
 
 

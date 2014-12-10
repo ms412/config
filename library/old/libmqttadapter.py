@@ -54,17 +54,24 @@ class mqtt_adapter(msgbus):
         broker = cfg_msg.select('BROKER')
         self.msgbus_publish('LOG','%s MQTT Adapter received configuration update %s '%('DEBUG', broker.getTree()))
 
-        self._host = str(broker.getNode('HOST','localhost'))
+        self._host = str(broker.getNode('HOST','iot.eclipse.org'))
         self._port = int(broker.getNode('PORT',1883))
         temp = str(broker.getNode('SUBSCRIBE','/SUBSCRIBE'))
         self._subscribe = temp.split(",")
         temp = str(broker.getNode('PUBLISH','/PUBLISH'))
         self._publish = temp.split(",")
 
+        self.disconnect()
         self.connect()
         self.subscribe()
 
         return True
+
+    def receiveQ(self):
+        item =''
+        if not self._receiveQ.empty():
+            item = self._receiveQ.get()
+        return item
 
 
     def on_connect(self, client, userdata, flags, rc):
@@ -76,7 +83,7 @@ class mqtt_adapter(msgbus):
         return True
 
     def on_disconnect(self, client, userdata, rc):
-        print('Mqtt Disconnect', rc)
+        print('Mqtt::on_disconnect', rc, userdata)
         self._connectState = False
         if rc != 0:
             conn_state = 'Unexpected'
@@ -102,11 +109,11 @@ class mqtt_adapter(msgbus):
         return True
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
-        print('MQTT: Subscribed: '+str(mid)+' '+str(granted_qos))
+        print('MQTT: Subscribed: '+str(mid)+' '+str(granted_qos)+ ' ' +str(userdata)+ ' ' +str(client))
         return True
 
     def create(self):
-        print('mqtt create mqtt object')
+        print('mqtt::create')
         self._mqttc = mqtt.Client(str(os.getpid()))
         return True
 
@@ -115,12 +122,13 @@ class mqtt_adapter(msgbus):
         return True
 
     def connect(self):
+        print ('mqtt::connect')
         self._mqttc.connect(self._host, self._port,60)
         self._mqttc.loop_start()
         return True
 
     def disconnect(self):
-        print('dissconnect')
+        print('mqtt::dissconnect')
         self._mqttc.disconnect()
         return True
 

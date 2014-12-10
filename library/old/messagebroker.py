@@ -1,12 +1,10 @@
-
 import json
 import time
-
 from queue import Queue
-from threading import Thread, Lock
+from threading import Thread
+
 from library.libmsgbus import msgbus
 from library.libtree import tree
-from library.libmqttadapter import mqtt_adapter
 
 
 class msgbroker(Thread,msgbus):
@@ -21,6 +19,7 @@ class msgbroker(Thread,msgbus):
         '''
         self._configQ = Queue()
         self._notifyQ = Queue()
+        self._msg_rxQ = Queue()
 
 
     def run(self):
@@ -37,10 +36,18 @@ class msgbroker(Thread,msgbus):
             while not self._configQ.empty():
                 self.on_config(self._configQ.get())
 
-
             while not self._notifyQ.empty():
                 self.on_notify(self._notifyQ.get())
 
+            while not self._msg_rxQ.empty():
+                self.on_msg_rx(self._msg_rxQ.get())
+
+           # item = self.mqttAdapter.receiverQ()
+
+            #for item in self.mqttAdapter.receiveQ():
+             #   print ('ITEM',item)
+
+            time.sleep(1)
 
         return True
 
@@ -48,12 +55,19 @@ class msgbroker(Thread,msgbus):
         ''''
         setup message pipes
         '''
-        self.msgbus_subscribe('NOTIFY', self._on_notify)
+        self.msgbus_subscribe('MSG_RX', self._on_msg_rx)
         self.msgbus_subscribe('CONFIG', self._on_config)
+        self.msgbus_subscribe('NOTIFY', self._on_notify)
 
-        self.mqttAdapter = mqtt_adapter()
+       # self.mqttAdapter = mqtt_adapter()
+      #  self.mqttAdapter.start()
+#        self.mqttAdapter.config()
 
 
+        return True
+
+    def _on_msg_rx(self,msg):
+        self._msg_rxQ.put(msg)
         return True
 
     def _on_notify(self,msg):
@@ -65,20 +79,24 @@ class msgbroker(Thread,msgbus):
         return True
 
     def on_config(self,cfg_msg):
-        self.mqttAdapter.config(cfg_msg)
+        print('messagebroker::on_config',cfg_msg)
+     #   self.mqttAdapter.config(cfg_msg)
         return True
 
     def on_notify(self,msg):
-        msg['MESSAGE'] = self._generate_header('NOTIFY')
         print('TEST',msg)
-        self.mqttAdapter.publish(self._dict2json(msg))
+        msg['MESSAGE'] = self._generate_header('NOTIFY')
+
+      #  self.mqttAdapter.publish(self._dict2json(msg))
+        self.msgbus_publish('MSG_TX',self._dict2json(msg))
+       # MSG_TX
         return True
 
-    def _on_data_rx(self,msg):
-        self.dataRx_queue.put(msg)
-        return True
+  #  def _on_data_rx(self,msg):
+  #      self.dataRx_queue.put(msg)
+   #     return True
 
-    def on_data_rx(self,msg):
+    def on_msg_rx(self,msg):
         msg = self._json2dict(msg.payload)
         msg_header = msg.get('MESSAGE',None)
         if msg_header:
@@ -138,7 +156,7 @@ if __name__ == "__main__":
 
     broker = {}
     test = {}
-    broker['HOST']='localhost'
+    broker['HOST']='192.168.1.117'
     broker['PORT']=1883
     test['BROKER']=broker
     t = tree(test)
@@ -146,3 +164,13 @@ if __name__ == "__main__":
     bus.msgbus_publish('CONFIG',t)
     time.sleep(1)
     bus.msgbus_publish('NOTIFY',test)
+
+    time.sleep(1)
+
+    broker = {}
+    test = {}
+    broker['HOST']='localhost'
+    broker['PORT']=1883
+    test['BROKER']=broker
+    t = tree(test)
+    bus.msgbus_publish('CONFIG',t)
