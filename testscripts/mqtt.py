@@ -62,7 +62,7 @@ class mqttclient(object):
         return True
 
     def connect(self):
-        print ('Conn3ect')
+        print ('Connect')
         self._mqttc.connect(self._host, self._port)
 
     def subscribe(self):
@@ -76,7 +76,7 @@ class mqttclient(object):
 
 
 if __name__ == '__main__':
-    MSG = [{'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'BROKER':{'HOST':'localhost','PORT':1883}}]
+    MSG = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'BROKER':{'HOSTS':'localhost','PORTE':1883}}
 
     msgStr = json.dumps(MSG)
 

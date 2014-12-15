@@ -14,6 +14,7 @@ class msgbroker(Thread,msgbus):
         Setup message Queues
         '''
         self.dataRx_queue = Queue()
+        self.dataRxQ = Queue()
 
         self.setup()
         print('INIT Messagebroker')
@@ -32,11 +33,17 @@ class msgbroker(Thread,msgbus):
         '''
 
         self.msgbus_subscribe('DATA_RX', self._on_data_rx)
+        self.msgbus_subscribe('DATA_TX', self._on_data_tx)
 
 
     def _on_data_rx(self,msg):
         self.dataRx_queue.put(msg)
         return
+
+    def _on_data_tx(self,msg):
+        self.dataTxQ.put(msg)
+
+    def on_data_tx(self,msg):
 
     def on_data_rx(self,msg):
         msg = self._json2dict(msg.payload)
@@ -62,3 +69,4 @@ class msgbroker(Thread,msgbus):
 
     def _json2dict(self,j_data):
         return json.loads(j_data.decode('utf8'))[0]
+

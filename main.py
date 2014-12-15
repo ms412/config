@@ -11,6 +11,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+from library.old import mqttbroker
+
 __app__ = "mqtt2gpio Adapter"
 __VERSION__ = "0.8"
 __DATE__ = "01.12.2014"
@@ -19,21 +21,14 @@ __contact__ = "M.Schiesser@gmail.com"
 __copyright__ = "Copyright (C) 2014 Markus Schiesser"
 __license__ = 'GPL v3'
 
-
-import os
 import sys
 import time
 
-from library.libtree import tree
 from library.libmsgbus import msgbus
-
 from module.adapter.config import configmodule
 from module.adapter.logging import log_adapter
-from module.adapter.broker import mqtt_adapter
-from module.adapter.message import messagebroker
-
+from module.adapter.messagebroker import msgbroker
 from module.manager.vhm import vhm
-
 
 
 class manager(msgbus):
@@ -60,48 +55,59 @@ class manager(msgbus):
         print('Debug Logging1')
         self._log_thread = log_adapter()
         self._log_thread.start()
+        self.msgbus_publish('LOG','%s Start Logging Adapter')
 
     #def start_borker(self):
     def start_msgbroker(self):
         print('Start Message Broker')
        # self.msgbus_publish('LOG','%s Start MQTT broker'%('INFO'))
-        self._msgborker = msgbroker()
+        self._msgbroker = msgbroker()
+        self._msgbroker.start()
+        self.msgbus_publish('LOG','%s Start Message broker')
 
-        self._broker_thread = mqtt_adapter()
-        self._broker_thread.start()
+   # def start_mqttbroker(self):
+    #    print('Start Broker')
+     #   self._mqttbroker = mqttbroker()
+      #  self._mqttbroker.start()
 
-    def start_msgbroker(self):
-        print('Start Message Broker')
-        self._msgbroker = messagebroker()
+
+    #    self._broker_thread = mqtt_adapter()
+   #     self._broker_thread.start()
+
+    #def start_msgbroker(self):
+     #   print('Start Message Broker')
+      #  self._msgbroker = msgbroker()
 
 
     def start_devices(self):
         print('Start Devices')
         self.msgbus_publish('LOG','%s Start VHM Virtual Hardware Manager')
         self._vhm_thread = vhm()
-        self._vhm_thread.start()
+       # self._vhm_thread.start()
 
     def run(self):
         """
         Entry point, initiates components and loops forever...
         """
 
-        self.start_logging()
         self.start_config()
+        self.start_logging()
+       # self.start_mqttbroker()
         self.start_msgbroker()
       #  self.start_msgbroker()
         self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
        # self.start_borker()
-        time.sleep(2)
+
         #self._msgbroker.run()
-       # self.start_devices()
-       # time.sleep(5)
+        self.start_devices()
+       # time.sleep(5)$
+        time.sleep(2)
 
         self._cfg_thread.publish()
 
-        while True:
-            self._msgbroker.run()
-            time.sleep(2)
+        #while True:
+         #   self._msgbroker.run()
+          #  time.sleep(2)
 
 
       #  self.start_borker()

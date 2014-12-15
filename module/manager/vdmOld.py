@@ -24,9 +24,8 @@ class vdm(Thread,msgbus):
         queues
         '''
         self.cfgQ = Queue()
-        #self.notify_vdmQ = Queue()
-        self.reqQ = Queue()
-        self.notifyVDMQ =Queue()
+        self.notify_vdmQ = Queue()
+        self.req_vdmQ = Queue()
 
         '''
         mandatory VDM data
@@ -43,11 +42,10 @@ class vdm(Thread,msgbus):
         self._VPMobj = {}
 
         '''
-        Hardware handel stores the handle to the hardware
-        only once available per VDM instance
+        subscribe channels
         '''
-        self._hwHandle = None
-
+        self._commConfVDMCh = 'CFG'
+        self._commReqVDMCh = 'REQ_VDM'
         '''
         publish channels
         '''
@@ -59,27 +57,13 @@ class vdm(Thread,msgbus):
 
     def setup(self):
 
-        self.msgbus_subscribe('CONFIG_VDM', self._on_cfg)
-        self.msgbus_subscribe('REQ_VDM', self._on_req)
-        #self.msgbus_subscribe(self._commNotifyVHMCh, self._on_vpm_notify)
-
-        return True
-
-    def _on_cfg(self,msg):
-        self.cfgQ.put(msg)
-        return True
-
-    def _on_req(self,msg):
-        self.reqQ.put(msg)
-        return True
-
-    def _on_notify_VDM(self,msg):
-        self.notifyVDMQ.put(msg)
-        return True
+        self.msgbus_subscribe(self._commConfVDMCh, self._on_cfg)
+        self.msgbus_subscribe(self._commReqVDMCh, self._on_vdm_request)
+        self.msgbus_subscribe(self._commNotifyVHMCh, self._on_vpm_notify)
 
     def run(self):
 
-      #  self.msgbus_publish(self._logCh,'%s VDM Virtual Device Manager %s Startup'%('INFO', self._DevName))
+        self.msgbus_publish(self._logCh,'%s VDM Virtual Device Manager %s Startup'%('INFO', self._DevName))
         threadRun = True
 
         while threadRun:
@@ -89,21 +73,11 @@ class vdm(Thread,msgbus):
             while not self.cfgQ.empty():
                 self.on_cfg(self.cfgQ.get())
 
-            while not self.reqQ.empty():
-                self.on_req(self.reqQ.get())
-
-            while not self.notifyVDMQ.empty():
-                device_header= {}
-                device_header[self._DevName]=self.notifyVDMQ.get()
-                self.msgbus_publish('NOTIFY',device_header)
-
-            '''
-            trigger VPM instances
-            '''
+          #  if len(self._VPMobj) > 0:
             for key,value in self._VPMobj.items():
                 value.run()
 
-        return True
+
 
 
     def on_cfg(self,cfg_msg):
@@ -126,7 +100,6 @@ class vdm(Thread,msgbus):
             device.addNode('HW_HANDLE', self._hwHandle)
       #      device.addNode('DEVICE_ID', self._DevName)
 
-
         elif 'RASPBERRY' in self._DEVICE_TYPE:
             self.msgbus_publish(self._logCh,'%s VDM Start HW Manager for Device: %s, Type %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
@@ -141,13 +114,10 @@ class vdm(Thread,msgbus):
         '''
         cfg_device = set(device.getNodesKey())
         run_device = set(self._VPMobj.keys())
-        print('VDM::VPM ports to confiure:', cfg_device,'run:',run_device)
         '''
         list devices of VPM to be started
         '''
-        print('VDM::START VPM',list(cfg_device.difference(run_device)))
         self.start_vpm(list(cfg_device.difference(run_device)),device)
-#self.start_vdm(list(cfg_devices.difference(run_devices)))
         '''
         list devices of VPM to be stopped
         '''
@@ -155,29 +125,45 @@ class vdm(Thread,msgbus):
         '''
         VPM devices to be configured
         '''
-        print ('VDM::Configure existing VPMs:',device.getNodesKey())
         self.cfg_vpm(device)
 
 
+    def _on_cfg(self,cfg_msg):
+        '''
+        Called from message bus and saves message into queue
+        :param cfg_msg: configuration message
+        :return: none
+        '''
+        self.cfgQ.put(cfg_msg)
+        return
+
+    def _on_vpm_notify(self,notify):
+        self.notify_vdmQ.put(notify)
+        return
+
+    def _on_vdm_request(self,req):
+        self.req_vdmQ.put(req)
+        return
+
     def start_vpm(self,device,cfg_msg):
-      #  self.msgbus_publish(self._logCh,'%s VDM %s, Start VPM devices: %s, Config: %s '%('INFO', self._DevName,device,cfg_msg))
-        for portID in device:
-            port_cfg = cfg_msg.select(portID)
+        self.msgbus_publish(self._logCh,'%s VDM %s, Start VPM devices: %s, Config: %s '%('INFO', self._DevName,device,cfg_msg))
+        for port in device:
+            port_cfg = cfg_msg.select(port)
             self._SYSTEM_TYPE = str(port_cfg.getNode('MODE'))
-            print ('start vpm mode',port_cfg.getNode('MODE'),portID,self._hwHandle,port_cfg)
+            print ('start vpm mode',port_cfg.getNode('MODE'),port,self._hwHandle,port_cfg)
 
             '''
             Start virtual port manager according configuration
             HW handle, notify channel
             '''
             if 'BINARY-OUT' in self._SYSTEM_TYPE:
-                self._VPMobj[portID]=vpm_binout(portID,self._hwHandle,self._on_notify_VDM)
+                self._VPMobj[port]=vpm_binout(port)
 
             elif 'BINARY-IN' in self._SYSTEM_TYPE:
-                self._VPMobj[portID]=vpm_binin(portID,self._hwHandle,self._on_notify_VDM)
+                self._VPMobj[port]=vpm_binin(port)
 
             else:
-                self.msgbus_publish('LOG','%s VPM mode of Port %s not fond %s '%('ERROR', portID,port_cfg.getNode('MODE')))
+                self.msgbus_publish('LOG','%s VPM mode of Port %s not fond %s '%('ERROR', item,port_cfg.getNode('MODE')))
 
         return
 
@@ -187,9 +173,7 @@ class vdm(Thread,msgbus):
 
     def cfg_vpm(self,device):
         self.msgbus_publish('LOG','%s VDM Configuration VPM devices: %s '%('INFO', device))
-        print ('DEVICES to configure',device.getNodesKey())
         for port in device.getNodesKey():
-            print('Device:', self._DevName,'Port:',port)
             self._VPMobj[port].on_cfg(device)
 #        self.msgbus_publish(self._commConf_Handle, self._on_cfg)
 

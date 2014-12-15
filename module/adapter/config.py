@@ -98,7 +98,8 @@ class configmodule(Thread,msgbus):
 
      def publishUpdate(self,cfg_tree):
          self.msgbus_publish('LOG','%s CONFIG: Publish new configuration %s'%('TRACE',cfg_tree.getTree()))
-         self.msgbus_publish('CONF',cfg_tree)
+         self.msgbus_publish('CONFIG',cfg_tree)
+       #  self.msgbus_publish('CONF',cfg_tree)
          return True
 
      def createTree(self,dictCfg):
@@ -138,7 +139,8 @@ class configmodule(Thread,msgbus):
 
      def publish(self):
          print('Root Pointer',self._rootPtr)
-         self.msgbus_publish('CONF',self._rootPtr)
+       #  self.msgbus_publish('CONF',self._rootPtr)
+         self.msgbus_publish('CONFIG',self._rootPtr)
 
      def select(self,path=None):
          tempPtr = self._rootPtr.select(path)

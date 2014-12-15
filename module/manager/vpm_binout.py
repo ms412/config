@@ -41,16 +41,7 @@ class vpm_binout(msgbus):
     def run(self):
         print ('VPN BinOut')
 
-    def _on_cfg(self,cfg_msg):
-        '''
-        Called from message bus and saves message into queue
-        :param cfg_msg: configuration message
-        :return: none
-        '''
-        self.cfgQ.put(cfg_msg)
-        return
-
-    def on_cfg(self,cfg_msg):
+    def config(self,cfg_msg):
       #  print('VPM received configuration message:',cfg_msg.getTree())
         self._HW_HANDLE = cfg_msg.getNode('HW_HANDLE')
         self._port_cfg = cfg_msg.select(self._portName)
