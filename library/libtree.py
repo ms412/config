@@ -125,4 +125,4 @@ class tree(object):
                  for subpath in self.leafPath(value):
                      yield (key,)+ subpath
 
-         return list(self)
+        # return list(self)

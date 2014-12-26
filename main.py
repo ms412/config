@@ -11,7 +11,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-from library.old import mqttbroker
+
 
 __app__ = "mqtt2gpio Adapter"
 __VERSION__ = "0.8"

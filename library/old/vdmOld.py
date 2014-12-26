@@ -1,15 +1,13 @@
-
-from threading import Thread, Lock
+from threading import Thread
 from queue import Queue
 import time
 
 from library.libmsgbus import msgbus
-from library.libtree import tree
 
-from module.manager.vpm_binout import vpm_binout
-from module.manager.vpm_binin import vpm_binin
-
+from module.manager.vpm import binin, binout
 from module.devices.mcp23017 import MCP23017
+
+
 #from module.devices.raspberry import Raspberry
 
 class vdm(Thread,msgbus):
@@ -157,10 +155,10 @@ class vdm(Thread,msgbus):
             HW handle, notify channel
             '''
             if 'BINARY-OUT' in self._SYSTEM_TYPE:
-                self._VPMobj[port]=vpm_binout(port)
+                self._VPMobj[port]=binout(port)
 
             elif 'BINARY-IN' in self._SYSTEM_TYPE:
-                self._VPMobj[port]=vpm_binin(port)
+                self._VPMobj[port]=binin(port)
 
             else:
                 self.msgbus_publish('LOG','%s VPM mode of Port %s not fond %s '%('ERROR', item,port_cfg.getNode('MODE')))

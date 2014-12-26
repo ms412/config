@@ -29,8 +29,8 @@ class log_adapter(Thread, msgbus):
         threadRun = True
 
         while threadRun:
-            time.sleep(2)
-            print('logging loop')
+            time.sleep(5)
+          #  print('logging loop')
             while not self.cfg_queue.empty():
                 self.on_cfg(self.cfg_queue.get())
 
@@ -52,7 +52,7 @@ class log_adapter(Thread, msgbus):
         return
 
     def on_log(self, logmsg):
-        print ('logmessage',logmsg)
+   #     print ('logmessage',logmsg)
         if logmsg.startswith('INFO'):
             msg = logmsg.replace('INFO','')
             self.info(msg.strip())
@@ -65,11 +65,11 @@ class log_adapter(Thread, msgbus):
         elif logmsg.startswith('CRITICAL'):
             msg = logmsg.replace('CRITICAL','')
             self.critical(msg.strip())
-        elif logmsg.startswith('TRACE'):
-            msg = logmsg.replace('TRACE','')
-            self.info(msg.strip())
+        elif logmsg.startswith('DEBUG'):
+            msg = logmsg.replace('DEBUG','')
+            self.debug(msg.strip())
         else:
-            self.info(logmsg.strip())
+            self.debug(logmsg.strip())
 
     def on_cfg(self,cfg_msg):
        # print('Config message',cfg_msg)

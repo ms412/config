@@ -77,7 +77,7 @@ class msgbroker(Thread,msgbus):
         else:
             del self._mqttbroker
             time.sleep(0.5)
-            self._mqttbroker = mqttbroker(broker)
+            self._mqttbroker = mqttbroker(broker.getTree())
         return True
 
     def on_notify(self,msg):

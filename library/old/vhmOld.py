@@ -3,7 +3,7 @@ from threading import Thread
 from queue import Queue
 
 from library.libmsgbus import msgbus
-from module.manager.vdmOld import vdm
+from library.old.vdmOld import vdm
 
 
 class vhm(Thread,msgbus):

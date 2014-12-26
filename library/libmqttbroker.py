@@ -27,7 +27,7 @@ class mqttbroker(msgbus):
         '''
         self._rxQueue = Queue()
 
-        self.setup(config)
+        self.setup(self._config)
 
     def __del__(self):
         self._mqttc.disconnect()

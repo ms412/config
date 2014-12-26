@@ -1,20 +1,19 @@
-
-from threading import Thread, Lock
+from threading import Thread
 from queue import Queue
 import time
 
 from library.libmsgbus import msgbus
-from library.libtree import tree
 
-from module.manager.vpm_binout import vpm_binout
-from module.manager.vpm_binin import vpm_binin
-
+from module.manager.vpm.binin import binin
+from module.manager.vpm.binout import binout
 from module.devices.mcp23017 import MCP23017
+
+
 #from module.devices.raspberry import Raspberry
 
 class vdm(Thread,msgbus):
 
-    def __init__(self, DevName):
+    def __init__(self,DevName,callback):
         Thread.__init__(self)
 
         self._DevName = DevName
@@ -51,8 +50,13 @@ class vdm(Thread,msgbus):
         '''
         publish channels
         '''
-        self._logCh = 'LOG'
-        self._commNotifyVHMCh = 'NOTIFY_VHM'
+       # 'LOG' = 'LOG'
+       # self._commNotifyVHMCh = 'NOTIFY_VHM'
+
+        '''
+        callback
+        '''
+        self._callbackVHM = callback
 
 
         self.setup()
@@ -79,7 +83,7 @@ class vdm(Thread,msgbus):
 
     def run(self):
 
-      #  self.msgbus_publish(self._logCh,'%s VDM Virtual Device Manager %s Startup'%('INFO', self._DevName))
+      #  self.msgbus_publish('LOG','%s VDM Virtual Device Manager %s Startup'%('INFO', self._DevName))
         threadRun = True
 
         while threadRun:
@@ -93,9 +97,7 @@ class vdm(Thread,msgbus):
                 self.on_req(self.reqQ.get())
 
             while not self.notifyVDMQ.empty():
-                device_header= {}
-                device_header[self._DevName]=self.notifyVDMQ.get()
-                self.msgbus_publish('NOTIFY',device_header)
+                self.on_notify(self.notifyVDMQ.get())
 
             '''
             trigger VPM instances
@@ -105,11 +107,36 @@ class vdm(Thread,msgbus):
 
         return True
 
+    def on_notify(self, msg):
+
+        device_msg= {}
+        device_msg[self._DevName]=msg
+        self._callbackVHM(device_msg)
+     #   self.msgbus_publish('NOTIFY',device_header)
+
+        return True
+
+    def on_request(self,msg):
+        device = msg.get(self._DevName,None)
+
+        if not device:
+            self.msgbus_publish('LOG','%s VDM Request not for Device: %s'%'INFO',self._DevName)
+        else:
+            for k in device.keys():
+                port = self._VPMobj.get(k,None)
+                if not port:
+                    self.msgbus_publish('LOG','%s VDM Requested Port does not exist: %s in Device: %s'%'ERROR',k,self._DevName)
+                else:
+                    port.request(device.get(k))
+
+        return True
+
+
 
     def on_cfg(self,cfg_msg):
 
         device = cfg_msg.select(self._DevName)
-        self.msgbus_publish(self._logCh,'%s VDM Configuration Update for Device: %s, Config: %s '%('INFO', self._DevName, device.getTree()))
+        self.msgbus_publish('LOG','%s VDM Configuration Update for Device: %s, Config: %s '%('INFO', self._DevName, device.getTree()))
         print('VDMgetNodes',device.getNodesKey())
 
         '''
@@ -119,16 +146,16 @@ class vdm(Thread,msgbus):
         self._UPDATE = float(device.getNode('UPDATE',0.1))
 
         if 'MCP23017' in self._DEVICE_TYPE:
-            self.msgbus_publish(self._logCh,'%s VDM Start HW Manager for Device: %s, Type: %s'%('INFO', self._DevName, self._DEVICE_TYPE))
+            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type: %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
             self._I2C_ADDRESS = int(device.getNode('I2C_ADDRESS'),16)
             self._hwHandle = MCP23017(self._SYSTEM_TYPE,self._I2C_ADDRESS)
-            device.addNode('HW_HANDLE', self._hwHandle)
+       #     device.addNode('HW_HANDLE', self._hwHandle)
       #      device.addNode('DEVICE_ID', self._DevName)
 
 
         elif 'RASPBERRY' in self._DEVICE_TYPE:
-            self.msgbus_publish(self._logCh,'%s VDM Start HW Manager for Device: %s, Type %s'%('INFO', self._DevName, self._DEVICE_TYPE))
+            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
             device.addNode('HW_HANDLE', self._hwHandle)
            # device.addNode('HW_HANDELE', self._hwHandle)
@@ -160,7 +187,7 @@ class vdm(Thread,msgbus):
 
 
     def start_vpm(self,device,cfg_msg):
-      #  self.msgbus_publish(self._logCh,'%s VDM %s, Start VPM devices: %s, Config: %s '%('INFO', self._DevName,device,cfg_msg))
+      #  self.msgbus_publish('LOG','%s VDM %s, Start VPM devices: %s, Config: %s '%('INFO', self._DevName,device,cfg_msg))
         for portID in device:
             port_cfg = cfg_msg.select(portID)
             self._SYSTEM_TYPE = str(port_cfg.getNode('MODE'))
@@ -171,10 +198,10 @@ class vdm(Thread,msgbus):
             HW handle, notify channel
             '''
             if 'BINARY-OUT' in self._SYSTEM_TYPE:
-                self._VPMobj[portID]=vpm_binout(portID,self._hwHandle,self._on_notify_VDM)
+                self._VPMobj[portID]=binout(portID,self._hwHandle,self._on_notify_VDM)
 
             elif 'BINARY-IN' in self._SYSTEM_TYPE:
-                self._VPMobj[portID]=vpm_binin(portID,self._hwHandle,self._on_notify_VDM)
+                self._VPMobj[portID]=binin(portID,self._hwHandle,self._on_notify_VDM)
 
             else:
                 self.msgbus_publish('LOG','%s VPM mode of Port %s not fond %s '%('ERROR', portID,port_cfg.getNode('MODE')))
@@ -182,7 +209,12 @@ class vdm(Thread,msgbus):
         return
 
     def stop_vpm(self,device):
-        self.msgbus_publish('LOG','%s VDM Stop VPM devices %s '%('INFO', device))
+       # self.msgbus_publish('LOG','%s Stop VPM Devices: %s , Port: %s '%('INFO', self._DevName, device))
+        print('VDM stop VPM instanced', device)
+        if len(device)> 0:
+            for port in device.getNodesKey():
+                self.msgbus_publish('LOG','%s Stop VPM Devices: %s , Port: %s '%('INFO', self._DevName, port))
+                del self._VPMobj[port]
         return
 
     def cfg_vpm(self,device):

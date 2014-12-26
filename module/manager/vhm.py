@@ -26,14 +26,31 @@ class vhm(msgbus):
     def setup(self):
         self.msgbus_subscribe('CONFIG', self.config)
        # self.msgbus_subscribe('REQ_MSG', self._on_vhm_request)
-        self.msgbus_subscribe('NOTIFY', self._on_vdm_notify)
+      #  self.msgbus_subscribe('NOTIFY', self.on_notify)
+        self.msgbus_subscribe('REQ_MSG', self.on_request)
         return True
 
-    def _on_vdm_notify(self,msg):
-        print('_VHM data received:',msg)
-        self.msgbus_publish('DATA_TX',msg)
+    def on_notify(self,msg):
+        print('VHM data received:',msg)
+        add_header = {}
+        add_header['DEVICES'] = msg
+        self.msgbus_publish('DATA_TX',add_header)
         return True
 
+    def on_request(self,msg):
+        devices = msg.get('DEVICES',None)
+
+        if not devices:
+            self.msgbus_publish('LOG','%s VHM Request with invalid data arrive: %s'%'WARNING',msg)
+        else:
+            for k in devices.keys():
+                device = self._threadDict.get(k,None)
+                if not device:
+                    self.msgbus_publish('LOG','%s VHM Requested Device does not exist: %s'%'ERROR',k)
+                else:
+                    device.on_request(devices.get(k))
+
+        return True
 
 
     def config(self,cfg_msg):
@@ -71,7 +88,7 @@ class vhm(msgbus):
         print('VHM::start devices',devices)
 
         for device in devices:
-            threadObj = vdm(device)
+            threadObj = vdm(device,self.on_notify)
             threadObj.start()
             self._threadDict[device]=threadObj
 
