@@ -105,7 +105,7 @@ class msgbroker(Thread,msgbus):
                     self.msgbus_publish('CFG_NEW',msg)
 
             elif msg_type == 'REQUEST':
-                self.msgbus_subscribe('REQ_MSG',msg)
+                self.msgbus_publish('REQUEST',msg)
 
             else:
                 print('Not found',msg)

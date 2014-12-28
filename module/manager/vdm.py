@@ -12,12 +12,42 @@ from module.devices.mcp23017 import MCP23017
 #from module.devices.raspberry import Raspberry
 
 class vdm(Thread,msgbus):
+    '''
+    Number of started VDMs depends on numbers of configured Devices, each device has is own thread
+
+    Channels Subscribe:
+    CONFIG_VDM: receives the configuration message for all VDMs
+
+    Channels Publish:
+    LOG sends log messages to the logging interface
+
+    Configuration IF:
+
+    Mandatory Thread Parameters
+        _DevName: contains name of the running VDM instance; name must be consistent with the configuration file, name can be freely chosen
+        callback: contains the callback method of the VHM instance to which Notifications are to be published
+
+    Mandatory Configuration Parameters:
+        TYPE: Type of the Hardware Interface, default Raspberry
+        SYSTEM: information of the board the gpio2mqtt adapter works on
+
+    Mandatory Configuration Parameters for Rsaspberry Device:
+        None
+
+    Mandatory Configuration Parameters for 23017 Devices:
+        I2C_ADDRESS: address of the i2c device at the first bus in Hex notification 0x1A
+
+
+    Optional Configuration Parameters:
+        UPDATE: time of the execution cycle of the thread expressed in seconds, default 1 sec
+
+    '''
 
     def __init__(self,DevName,callback):
         Thread.__init__(self)
 
         self._DevName = DevName
-        print('##VDM##',self._DevName)
+     #   print('##VDM##',self._DevName)
 
         '''
         queues
@@ -25,14 +55,14 @@ class vdm(Thread,msgbus):
         self.cfgQ = Queue()
         #self.notify_vdmQ = Queue()
         self.reqQ = Queue()
-        self.notifyVDMQ =Queue()
+        self.notifyQ =Queue()
 
         '''
         mandatory VDM data
         '''
-        self._UPDATE = 0.1
+        self._UPDATE = 1
         self._DEVICE_TYPE = ''
-        self._DEVICE_NAME = ''
+       # self._DEVICE_NAME = ''
 
        # self._VPMInstance = {}
 
@@ -48,37 +78,42 @@ class vdm(Thread,msgbus):
         self._hwHandle = None
 
         '''
-        publish channels
-        '''
-       # 'LOG' = 'LOG'
-       # self._commNotifyVHMCh = 'NOTIFY_VHM'
-
-        '''
         callback
         '''
-        self._callbackVHM = callback
+        self._callback = callback
 
 
         self.setup()
 
+    def __del__(self):
+        '''
+        stop all concerning VPM objects before destroying myself
+        '''
+
+        for key, value in self._VPMobj:
+            del value
+
+        self.msgbus_publish('LOG','%s VDM Module Destroying myself: %s '%('INFO', self._DevName))
+
+
     def setup(self):
 
-        self.msgbus_subscribe('CONFIG_VDM', self._on_cfg)
-        self.msgbus_subscribe('REQ_VDM', self._on_req)
+        self.msgbus_subscribe('CONFIG_VDM', self._on_config)
+     #   self.msgbus_subscribe('REQ_VDM', self._on_req)
         #self.msgbus_subscribe(self._commNotifyVHMCh, self._on_vpm_notify)
 
         return True
 
-    def _on_cfg(self,msg):
+    def _on_config(self,msg):
         self.cfgQ.put(msg)
         return True
 
-    def _on_req(self,msg):
+    def _on_request(self,msg):
         self.reqQ.put(msg)
         return True
 
-    def _on_notify_VDM(self,msg):
-        self.notifyVDMQ.put(msg)
+    def _on_notify(self,msg):
+        self.notifyQ.put(msg)
         return True
 
     def run(self):
@@ -91,13 +126,13 @@ class vdm(Thread,msgbus):
             print('VDM loop Device ',self._DevName, len(self._VPMobj))
 
             while not self.cfgQ.empty():
-                self.on_cfg(self.cfgQ.get())
+                self.on_config(self.cfgQ.get())
 
             while not self.reqQ.empty():
-                self.on_req(self.reqQ.get())
+                self.on_request(self.reqQ.get())
 
-            while not self.notifyVDMQ.empty():
-                self.on_notify(self.notifyVDMQ.get())
+            while not self.notifyQ.empty():
+                self.on_notify(self.notifyQ.get())
 
             '''
             trigger VPM instances
@@ -108,11 +143,15 @@ class vdm(Thread,msgbus):
         return True
 
     def on_notify(self, msg):
+        '''
+        receives notification from VPM instance and forwards it to VHM by adding device message header with name of VDM instance
+        :param msg: message from VPM instance as dictionary
+        :return: True
+        '''
 
         device_msg= {}
         device_msg[self._DevName]=msg
-        self._callbackVHM(device_msg)
-     #   self.msgbus_publish('NOTIFY',device_header)
+        self._callback(device_msg)
 
         return True
 

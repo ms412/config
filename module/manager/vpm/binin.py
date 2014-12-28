@@ -58,6 +58,9 @@ class binin(msgbus):
 
         self.setup()
 
+    def __del__(self):
+        self.msgbus_publish('LOG','%s VPM Module Mode: %s Destroying myself: %s '%('INFO', self._mode, self._VPM_ID))
+
     def setup(self):
        # self.msgbus_publish('LOG','%s VPM Module BINARY IN Setup Configuration: %s '%('INFO', self._VPM_CFG))    def setup(self):
 
@@ -66,6 +69,10 @@ class binin(msgbus):
 
 
     def config(self,msg):
+        '''
+        :param msg: contains configuration as a tree object
+        :return:
+        '''
         print('Config interface')
         self._off_value = str(msg.getNode('OFF_VALUE','OFF'))
         self._on_value = str(msg.getNode('ON_VALUE','ON'))
@@ -80,21 +87,13 @@ class binin(msgbus):
         '''
         self._hwHandle.ConfigIO(self._hwid,1)
 
+        return True
+
 
     def run(self):
-        test ={}
-        self._counter = self._counter+1
-        print ('VPN BinIn')
-        test['Counter']=self._counter
-        test['ID']=self._VPM_ID
-        print('Testmessage',test)
-      #  self._callback(test)
-
-
         '''
-        Run Task
+        run is getting called on a regular base from VDM, frequency of calls defined by update value in VDM configuration section
         '''
-
 
         pinstate = self._hwHandle.ReadPin(self._hwid)
 
@@ -140,6 +139,11 @@ class binin(msgbus):
         self._callback(notify_msg)
 
     def request(msg):
+        '''
+        request interface
+        :param msg: dictionary anny value expected; will call notify interface to send an update of the current pin state
+        :return:
+        '''
         msgtype = msg.get('GET',None)
 
         self.notify()
