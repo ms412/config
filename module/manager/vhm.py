@@ -92,7 +92,7 @@ class vhm(msgbus):
         '''
 
         dev_cfg = cfg_msg.select('DEVICES')
-        print('#####',devices)
+        print('#####',dev_cfg)
         self.msgbus_publish('LOG','%s VHM Configuration Update received %s '%('INFO', dev_cfg.getTree()))
         print('getNodes',dev_cfg.getNodesKey())
 

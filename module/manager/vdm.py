@@ -4,12 +4,21 @@ import time
 
 from library.libmsgbus import msgbus
 
-from module.manager.vpm.binin import binin
-from module.manager.vpm.binout import binout
+'''
+import device interface drivers
+'''
+#from module.devices.raspberry import raspberry
 from module.devices.mcp23017 import MCP23017
 
-
-#from module.devices.raspberry import Raspberry
+'''
+import port manager
+'''
+from module.manager.vpm.binin import binin
+from module.manager.vpm.binout import binout
+from module.manager.vpm.trigger import trigger
+from module.manager.vpm.puls import puls
+from module.manager.vpm.pwm import pwm
+from module.manager.vpm.timerin import timerin
 
 class vdm(Thread,msgbus):
     '''
@@ -145,6 +154,7 @@ class vdm(Thread,msgbus):
     def on_notify(self, msg):
         '''
         receives notification from VPM instance and forwards it to VHM by adding device message header with name of VDM instance
+
         :param msg: message from VPM instance as dictionary
         :return: True
         '''
@@ -156,6 +166,17 @@ class vdm(Thread,msgbus):
         return True
 
     def on_request(self,msg):
+        '''
+        called by main thread in case request queue contains requests
+        :param msg: message from VHM instance as dictionary
+        :return: if message could be deliverd to VPM instance True else False
+        '''
+        result = False
+
+        '''
+        Selects only concerning information from Dictionary, in case it's not concerning this task we return
+        '''
+
         device = msg.get(self._DevName,None)
 
         if not device:
@@ -167,40 +188,63 @@ class vdm(Thread,msgbus):
                     self.msgbus_publish('LOG','%s VDM Requested Port does not exist: %s in Device: %s'%'ERROR',k,self._DevName)
                 else:
                     port.request(device.get(k))
+                    result = True
 
-        return True
+        return result
 
+    def on_config(self,cfg_msg):
+        '''
+        configures the VDM thread
+        :param cfg_msg: configuration message as Tree object
+        :return:in case HW interface started True else False
+        '''
 
+        result = False
 
-    def on_cfg(self,cfg_msg):
-
+        '''
+        selects the concerning branch of the Tree object
+        '''
         device = cfg_msg.select(self._DevName)
         self.msgbus_publish('LOG','%s VDM Configuration Update for Device: %s, Config: %s '%('INFO', self._DevName, device.getTree()))
         print('VDMgetNodes',device.getNodesKey())
 
         '''
-        mandatory configurations
+        reads mandatory configurations from tree object
         '''
         self._DEVICE_TYPE = str(device.getNode('TYPE','RASPBERRY'))
         self._UPDATE = float(device.getNode('UPDATE',0.1))
+
+        '''
+        starts the concerning HW interface which will be managed be the Virtual Device Manager
+        '''
+
+        '''
+        manage the MCP23017 GPIO interface connected via i2c interface, reads all configuration parameter from configuration tree object
+        handle to the hardware drive object stored in self._hwHandle
+        '''
 
         if 'MCP23017' in self._DEVICE_TYPE:
             self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type: %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
             self._I2C_ADDRESS = int(device.getNode('I2C_ADDRESS'),16)
             self._hwHandle = MCP23017(self._SYSTEM_TYPE,self._I2C_ADDRESS)
-       #     device.addNode('HW_HANDLE', self._hwHandle)
-      #      device.addNode('DEVICE_ID', self._DevName)
+            result = True
 
-
+            '''
+            manage the Raspberry GPIOs
+            '''
         elif 'RASPBERRY' in self._DEVICE_TYPE:
             self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
             device.addNode('HW_HANDLE', self._hwHandle)
-           # device.addNode('HW_HANDELE', self._hwHandle)
-           # device.addNode('DEVICE_ID', self._DevName)
-#            self._hwHandle = raspberry()
+            result = True
 
+            '''
+            add more HW interface driver in the future
+            '''
+        else:
+            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, UNKNOWN'%('INFO', self._DevName))
+            result = False
 
         '''
         compare running VPM devices with configured devices
@@ -213,7 +257,6 @@ class vdm(Thread,msgbus):
         '''
         print('VDM::START VPM',list(cfg_device.difference(run_device)))
         self.start_vpm(list(cfg_device.difference(run_device)),device)
-#self.start_vdm(list(cfg_devices.difference(run_devices)))
         '''
         list devices of VPM to be stopped
         '''
@@ -224,44 +267,75 @@ class vdm(Thread,msgbus):
         print ('VDM::Configure existing VPMs:',device.getNodesKey())
         self.cfg_vpm(device)
 
+        return result
+
 
     def start_vpm(self,device,cfg_msg):
-      #  self.msgbus_publish('LOG','%s VDM %s, Start VPM devices: %s, Config: %s '%('INFO', self._DevName,device,cfg_msg))
+        '''
+        starts the VPM de device
+        :param device: contains the list of devices to be started
+        :param cfg_msg: configuration for all Virtual Port Managers managed by this VDM instance, as tree type object
+        :return: True in case VDM could be started else False
+        '''
+
+        result = False
+
         for portID in device:
             port_cfg = cfg_msg.select(portID)
-            self._SYSTEM_TYPE = str(port_cfg.getNode('MODE'))
+            self._PIN_MODE = str(port_cfg.getNode('MODE'))
             print ('start vpm mode',port_cfg.getNode('MODE'),portID,self._hwHandle,port_cfg)
 
             '''
             Start virtual port manager according configuration
-            HW handle, notify channel
+            HW handle, notify channel and saved in _VPMobj dictionary
             '''
-            if 'BINARY-OUT' in self._SYSTEM_TYPE:
-                self._VPMobj[portID]=binout(portID,self._hwHandle,self._on_notify_VDM)
+            if 'BINARY-OUT' in self._PIN_MODE:
+                self._VPMobj[portID]=binout(portID,self._hwHandle,self._on_notify)
+                result = True
 
-            elif 'BINARY-IN' in self._SYSTEM_TYPE:
-                self._VPMobj[portID]=binin(portID,self._hwHandle,self._on_notify_VDM)
+            elif 'BINARY-IN' in self._PIN_MODE:
+                self._VPMobj[portID]=binin(portID,self._hwHandle,self._on_notify)
+                result = True
+
+            elif 'TRIGGER' in self._PIN_MODE:
+                self._VPMobj[portID]=trigger(portID,self._hwHandle,self._on_notify)
+                result = True
 
             else:
                 self.msgbus_publish('LOG','%s VPM mode of Port %s not fond %s '%('ERROR', portID,port_cfg.getNode('MODE')))
+                result = False
 
-        return
+        return result
 
     def stop_vpm(self,device):
-       # self.msgbus_publish('LOG','%s Stop VPM Devices: %s , Port: %s '%('INFO', self._DevName, device))
+        '''
+        stops all VPM devices listed in device list
+        :param device: name of device
+        :return: true in case deletion was successful else False
+        '''
+
+        result = False
+
         print('VDM stop VPM instanced', device)
         if len(device)> 0:
             for port in device.getNodesKey():
                 self.msgbus_publish('LOG','%s Stop VPM Devices: %s , Port: %s '%('INFO', self._DevName, port))
                 del self._VPMobj[port]
-        return
+                result = True
+        return result
 
     def cfg_vpm(self,device):
+        '''
+        sends configuration message to all VPMs managed by this VDM instance
+        :param device: configuration as device tree object
+        :return: True
+        '''
+
         self.msgbus_publish('LOG','%s VDM Configuration VPM devices: %s '%('INFO', device))
         print ('DEVICES to configure',device.getNodesKey())
         for port in device.getNodesKey():
             print('Device:', self._DevName,'Port:',port)
-            self._VPMobj[port].on_cfg(device)
+            self._VPMobj[port].on_config(device)
 #        self.msgbus_publish(self._commConf_Handle, self._on_cfg)
 
-        return
+        return True

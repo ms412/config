@@ -4,9 +4,7 @@ import time
 
 from library.libmsgbus import msgbus
 
-#from module.manager.vdm import vdm
-
-class binin(msgbus):
+class trigger(msgbus):
     '''
     Mandatory values
     vpmID contains unique ID of the VPM instance -> Port-Section-Name in Configuration
@@ -41,7 +39,7 @@ class binin(msgbus):
         '''
         System parameter
         '''
-        self._mode = 'BINARY-IN'
+        self._mode = 'TRIGGER'
         self._hwid = 0
 
         '''
@@ -64,10 +62,10 @@ class binin(msgbus):
 
     def setup(self):
         '''
-        configure port as input port
+        configure port as output
         '''
+        self._hwHandle.ConfigIO(self._hwid,0)
 
-        self._hwHandle.ConfigIO(self._hwid,1)
        # self.msgbus_publish('LOG','%s VPM Module BINARY IN Setup Configuration: %s '%('INFO', self._VPM_CFG))    def setup(self):
 
         print('VPM Mode:', self._mode,'ID', self._VPM_ID)
@@ -88,6 +86,11 @@ class binin(msgbus):
 
         if not self._hwid:
             print('VPM::ERROR no HWID in config')
+
+        '''
+        configure port as input port
+        '''
+        self._hwHandle.ConfigIO(self._hwid,1)
 
         return True
 
