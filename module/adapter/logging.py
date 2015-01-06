@@ -41,7 +41,7 @@ class log_adapter(Thread, msgbus):
 
     def setup(self):
         self.msgbus_subscribe('LOG', self._on_log)
-        self.msgbus_subscribe('CONF', self._on_cfg)
+        self.msgbus_subscribe('CONFIG', self._on_cfg)
 
     def _on_log(self,log_msg):
         self.log_queue.put(log_msg)

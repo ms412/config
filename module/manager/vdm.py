@@ -16,9 +16,9 @@ import port manager
 from module.manager.vpm.binin import binin
 from module.manager.vpm.binout import binout
 from module.manager.vpm.trigger import trigger
-from module.manager.vpm.puls import puls
-from module.manager.vpm.pwm import pwm
-from module.manager.vpm.timerin import timerin
+#from module.manager.vpm.pulse import pulse
+#from module.manager.vpm.pwm import pwm
+#from module.manager.vpm.timerin import timerin
 
 class vdm(Thread,msgbus):
     '''
@@ -335,7 +335,7 @@ class vdm(Thread,msgbus):
         print ('DEVICES to configure',device.getNodesKey())
         for port in device.getNodesKey():
             print('Device:', self._DevName,'Port:',port)
-            self._VPMobj[port].on_config(device)
+            self._VPMobj[port].config(device)
 #        self.msgbus_publish(self._commConf_Handle, self._on_cfg)
 
         return True

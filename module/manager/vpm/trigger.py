@@ -47,7 +47,7 @@ class trigger(msgbus):
         '''
         self._pinstatesave = 0
         self._T0 = time.time()
-
+        self._T1 = 0
        # self._update = False
 
         '''
@@ -81,16 +81,12 @@ class trigger(msgbus):
         print('Config interface')
         self._off_value = str(cfg.getNode('OFF_VALUE','OFF'))
         self._on_value = str(cfg.getNode('ON_VALUE','ON'))
-        self._interval = int(cfg.getNode('INTERVAL',0))
+        self._puls_length = float(cfg.getNode('PULS_LENGTH',2))
+
         self._hwid = int(cfg.getNode('HWID',None))
 
         if not self._hwid:
             print('VPM::ERROR no HWID in config')
-
-        '''
-        configure port as input port
-        '''
-        self._hwHandle.ConfigIO(self._hwid,1)
 
         return True
 
