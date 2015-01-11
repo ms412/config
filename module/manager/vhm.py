@@ -50,7 +50,7 @@ class vhm(msgbus):
         :param msg: message as dictionary from VDM
         :return: True
         '''
-        print('VHM data received:',msg)
+      #  print('VHM data received:',msg)
         add_header = {}
         add_header['DEVICES'] = msg
         self.msgbus_publish('DATA_TX',add_header)
@@ -92,9 +92,9 @@ class vhm(msgbus):
         '''
 
         dev_cfg = cfg_msg.select('DEVICES')
-        print('#####',dev_cfg)
+      #  print('#####',dev_cfg)
         self.msgbus_publish('LOG','%s VHM Configuration Update received %s '%('INFO', dev_cfg.getTree()))
-        print('getNodes',dev_cfg.getNodesKey())
+       # print('getNodes',dev_cfg.getNodesKey())
 
         '''
         compare running devices with configured devices

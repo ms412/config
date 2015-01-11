@@ -1,7 +1,8 @@
 
 import time
 import os
-import paho.mqtt.client as mqtt
+import library.libpaho as mqtt
+#import paho.mqtt.client as mqtt
 
 from queue import Queue
 from library.libmsgbus import msgbus
@@ -27,19 +28,29 @@ class mqttbroker(msgbus):
         '''
         self._rxQueue = Queue()
 
-        self.setup(self._config)
-
-    def __del__(self):
-        self._mqttc.disconnect()
-
-    def setup(self,config):
-        print ('Setup mqtt')
+        print('MQTT: Init Mqtt object Startup', self)
 
         '''
         create mqtt session
         '''
         #self.create()
         self._mqttc = mqtt.Client(str(os.getpid()))
+
+        self.setup(self._config)
+
+    def __del__(self):
+        print("Delete libmqttbroker")
+        self._mqttc.disconnect()
+
+    def reconfig(self,config):
+        print('MQTT::recondfig')
+        self._mqttc.disconnect()
+        self.reinitialise()
+        self.setup(config)
+        return True
+
+    def setup(self,config):
+        print ('MQTT::Setup libmqttbroker:',self._config)
 
         '''
         setup callbacks
@@ -49,6 +60,7 @@ class mqttbroker(msgbus):
         self._mqttc.on_publish = self.on_publish
         self._mqttc.on_subscribe = self.on_subscribe
         self._mqttc.on_disconnect = self.on_disconnect
+        self._mqttc.on_log = self.on_log
 
         '''
         broker Configuration
@@ -70,6 +82,9 @@ class mqttbroker(msgbus):
         self.subscribe()
         return True
 
+    def run(self):
+        self._mqttc.loop()
+
     def tx_data(self,message):
         self.publish(message)
         return True
@@ -88,19 +103,19 @@ class mqttbroker(msgbus):
 
 
     def on_connect(self, client, userdata, flags, rc):
-        print('MQTT: connect to host:', self._host,str(rc))
+        print('MQTT:: connect to host:', self._host,str(rc))
         self._connectState = True
         self.msgbus_publish('LOG','%s Broker: Connected %s'%('INFO', self._connectState))
 
         return True
 
     def on_disconnect(self, client, userdata, rc):
-        print('Mqtt Disconnect', rc)
-        self._connectState = False
-        if rc != 0:
-            conn_state = 'Unexpected'
-            self.msgbus_publish('LOG','%s Broker: Lost Connection to MQTT:%s '%('INFO',conn_state))
-            self._mqttc.connect(self._host, self._port, 60)
+        print('Mqtt:: Disconnect', userdata, rc)
+    #    self._connectState = False
+     #   if rc != 0:
+      #      conn_state = 'Unexpected'
+       #     self.msgbus_publish('LOG','%s Broker: Lost Connection to MQTT:%s '%('INFO',conn_state))
+        #    self._mqttc.connect(self._host, self._port, 60)
 
         return 0
 
@@ -123,6 +138,10 @@ class mqttbroker(msgbus):
     def on_subscribe(self, client, userdata, mid, granted_qos):
         print('MQTT: Subscribed: '+str(mid)+' '+str(granted_qos))
         return 0
+
+    def on_log(self, client, userdata, level, buf):
+        print('MQTT: Log',client, userdata, level, buf)
+        return True
 
     def create(self):
         print('mqtt create mqtt object')
@@ -147,10 +166,11 @@ class mqttbroker(msgbus):
         self._mqttc.disconnect()
 
     def subscribe(self,channel = None):
+        self._mqttc.subscribe('/HELP/',0)
         if not channel:
-            for item in self._subscribe:
-                self._mqttc.subscribe(item + str('/#'),0)
-                print('mqtt subscribe',item)
+            #for item in self._subscribe:
+             #   self._mqttc.subscribe(item + str(item),0)
+            print('mqtt subscribe')
 
         else:
             print('mqtt subscribe by commandline',channel)

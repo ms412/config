@@ -66,11 +66,11 @@ class binin(msgbus):
         '''
         configure port as input port
         '''
+        print('VPM Mode:', self._mode,'ID', self._VPM_ID,'hw handle',self._hwHandle)
 
-        self._hwHandle.ConfigIO(self._hwid,1)
+      #  self._hwHandle.ConfigIO(self._hwid,1)
        # self.msgbus_publish('LOG','%s VPM Module BINARY IN Setup Configuration: %s '%('INFO', self._VPM_CFG))    def setup(self):
 
-        print('VPM Mode:', self._mode,'ID', self._VPM_ID)
 
         return True
 
@@ -79,6 +79,8 @@ class binin(msgbus):
         :param msg: contains configuration as a tree object
         :return:
         '''
+        IN = 1
+        OUT = 0
         cfg = msg.select(self._VPM_ID)
         print('Config interface')
         self._off_value = str(cfg.getNode('OFF_VALUE','OFF'))
@@ -88,7 +90,9 @@ class binin(msgbus):
 
         if not self._hwid:
             print('VPM::ERROR no HWID in config')
-
+        else:
+            print('VPM:', self._hwid)
+            self._hwHandle.ConfigIO(self._hwid,IN)
         return True
 
     def run(self):

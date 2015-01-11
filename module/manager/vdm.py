@@ -7,7 +7,7 @@ from library.libmsgbus import msgbus
 '''
 import device interface drivers
 '''
-#from module.devices.raspberry import raspberry
+from module.devices.raspberry import raspberry
 from module.devices.mcp23017 import MCP23017
 
 '''
@@ -236,7 +236,8 @@ class vdm(Thread,msgbus):
         elif 'RASPBERRY' in self._DEVICE_TYPE:
             self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
-            device.addNode('HW_HANDLE', self._hwHandle)
+            self._hwHandle = raspberry()
+            #device.addNode('HW_HANDLE', self._hwHandle)
             result = True
 
             '''
@@ -245,6 +246,7 @@ class vdm(Thread,msgbus):
         else:
             self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, UNKNOWN'%('INFO', self._DevName))
             result = False
+            print('VDM:: unknown device',self._DEVICE_TYPE)
 
         '''
         compare running VPM devices with configured devices

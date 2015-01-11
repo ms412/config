@@ -4,7 +4,7 @@
 class tree(object):
 
      def __init__(self,tree):
-        print('Tree init')
+    #   print('Tree init')
         self._treeObj = tree
         #print ('Tree',tree)
 
@@ -23,7 +23,7 @@ class tree(object):
      def select(self,path = None):
          tempTree = self._treeObj
          for temp in path.split('.'):
-             print('temptree',tempTree)
+          #   print('temptree',tempTree)
              tempTree = tempTree.get(temp)
 
          return tree(tempTree)

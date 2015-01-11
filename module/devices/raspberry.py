@@ -70,7 +70,7 @@ class raspberry(object):
 
 
     def ConfigPWM(self,ioPin):
-         self._loghandle.info('hwIF_raspberry::ConfigPWM Set PWM mode for Port: %s',ioPin)
+  #       self._loghandle.info('hwIF_raspberry::ConfigPWM Set PWM mode for Port: %s',ioPin)
          self._gpio.setup(ioPin,self._gpio.OUT)
 
  #        self._pwm.Servo()
@@ -92,7 +92,7 @@ class raspberry(object):
             else:
                 self.WritePin(ioPin,0)
 
-            self._loghandle.info('hwIF_raspberry::WritePWM Stop PWM value: Low for Port: %s',ioPin)
+   #         self._loghandle.info('hwIF_raspberry::WritePWM Stop PWM value: Low for Port: %s',ioPin)
         elif value >= 97:
             if self._pwmState == True:
                 #print"WritePWM 97, pwmState True"
@@ -106,14 +106,14 @@ class raspberry(object):
 #             self._gpio.output(ioPin, 1)
             #value = 19900
             #self._pwm.set_servo(ioPin,value)
-            self._loghandle.info('hwIF_raspberry::WritePWM Stop PWM value: High for Port: %s',ioPin)
+    #        self._loghandle.info('hwIF_raspberry::WritePWM Stop PWM value: High for Port: %s',ioPin)
         else:
             if self._pwmState == False:
                 self.ConfigPWM(ioPin)
                 self._pwmState = True
                # print"WritePWM else, pwmState True"
 
-            self._loghandle.info('hwIF_raspberry::WritePWM Set PWM value: %s for Port: %s',value,ioPin)
+    #        self._loghandle.info('hwIF_raspberry::WritePWM Set PWM value: %s for Port: %s',value,ioPin)
             value = value*200
             self._pwm.set_servo(ioPin,value)
 
@@ -125,7 +125,7 @@ class raspberry(object):
 
 
     def WritePin(self,ioPin,value):
-        self._loghandle.info('hwIF_raspberry::WritePin ioPin %s, value: %s', ioPin, value)
+   #     self._loghandle.info('hwIF_raspberry::WritePin ioPin %s, value: %s', ioPin, value)
         self._gpio.output(ioPin, value)
 
         return True
@@ -134,6 +134,6 @@ class raspberry(object):
     def ReadPin(self,ioPin):
 
         value = self._gpio.input(ioPin)
-        self._loghandle.info('hwIF_raspberry::ReadPin ioPin %s, value: %s', ioPin, value)
+    #    self._loghandle.info('hwIF_raspberry::ReadPin ioPin %s, value: %s', ioPin, value)
 
         return value

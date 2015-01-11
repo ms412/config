@@ -41,8 +41,8 @@ class Config(Tree):
         tmpTree = Tree(json.loads(jconfig))
 
         if 'HEADER' in tmpTree.list():
-            print('MSG',tmpTree.list())
-            print ('Treepointer',tmpTree.select('HEADER'))
+           # print('MSG',tmpTree.list())
+           # print ('Treepointer',tmpTree.select('HEADER'))
             if 'TYPE' in tmpTree.list() and 'CONFIG' in tmpTree.listLeafs():
                 print('TYPE',tmpTree.listLeafs())
                 print('Merge',self.treeHandle.merge(json.loads(jconfig)))

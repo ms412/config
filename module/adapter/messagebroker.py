@@ -20,7 +20,7 @@ class msgbroker(Thread,msgbus):
         self._configQ = Queue()
         self._notifyQ = Queue()
        # self._msg_rxQ = Queue()
-        print('messagebroker')
+        print('Init messagebroker object')
 
 
     def run(self):
@@ -73,11 +73,16 @@ class msgbroker(Thread,msgbus):
     def on_config(self,cfg_msg):
         broker = cfg_msg.select('BROKER')
         if not self._mqttbroker:
+            print('Messagebroker:: initial startup')
             self._mqttbroker = mqttbroker(broker.getTree())
+            #print ('MEssagebroker: start new MQTT ',self._mqttbroker)
         else:
-            del self._mqttbroker
-            time.sleep(0.5)
-            self._mqttbroker = mqttbroker(broker.getTree())
+            print ('MEssagebroker: New Configuration available restart broker',self._mqttbroker)
+            self._mqttbroker.reconfig(broker.getTree())
+            #del self._mqttbroker
+            #time.sleep(0.5)
+            #self._mqttbroker = mqttbroker(broker.getTree())
+          #  print ('MEssagebroker: start new MQTT with updated ',self._mqttbroker)
         return True
 
     def on_notify(self,msg):

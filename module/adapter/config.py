@@ -27,7 +27,7 @@ class configmodule(Thread,msgbus):
 
      def run(self):
 
-        print ('run config adapter')
+   #     print ('run config adapter')
 
         self.setup(self.cfg_file)
 
@@ -35,7 +35,7 @@ class configmodule(Thread,msgbus):
 
         while threadRun:
             time.sleep(3)
-            print('config loop')
+    #        print('config loop')
             self.msgbus_publish('LOG','%s Configuration loop '%('WARNING'))
 
             while not self.msg_queue.empty():
@@ -116,7 +116,7 @@ class configmodule(Thread,msgbus):
          :param jsonStr:
          :return:
          '''
-         print('String',jsonstr)
+      #   print('String',jsonstr)
          jdata = json.loads(jsonstr)
          if 'HEADER' in jdata:
              print('jsting',jdata)
@@ -138,7 +138,7 @@ class configmodule(Thread,msgbus):
          return
 
      def publish(self):
-         print('Root Pointer',self._rootPtr)
+    #     print('Root Pointer',self._rootPtr)
        #  self.msgbus_publish('CONF',self._rootPtr)
          self.msgbus_publish('CONFIG',self._rootPtr)
 
