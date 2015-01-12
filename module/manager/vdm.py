@@ -132,7 +132,7 @@ class vdm(Thread,msgbus):
 
         while threadRun:
             time.sleep(self._UPDATE)
-            print('VDM loop Device ',self._DevName, len(self._VPMobj))
+            print('VDM loop Device ',self._DevName, len(self._VPMobj), self._UPDATE)
 
             while not self.cfgQ.empty():
                 self.on_config(self.cfgQ.get())
@@ -227,7 +227,13 @@ class vdm(Thread,msgbus):
             self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type: %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
             self._I2C_ADDRESS = int(device.getNode('I2C_ADDRESS'),16)
-            self._hwHandle = MCP23017(self._SYSTEM_TYPE,self._I2C_ADDRESS)
+            if 'RASPBERRY_B1' in self._SYSTEM_TYPE:
+                self._hwHandle = MCP23017(1,self._I2C_ADDRESS)
+            elif 'RASPBERRY_A1' in self._SYSTEM_TYPE:
+                self._hwHandle = MCP23017(0,self._I2C_ADRESS)
+            else:
+                print('ERROR unknown device type', self._SYSTEM_TYPE)
+
             result = True
 
             '''

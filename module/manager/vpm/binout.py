@@ -32,15 +32,15 @@ class binout(msgbus):
         notifyIF = interface to which the VPM sends notifications
         '''
 
-        self._ID = ID
+        self._VPM_ID = ID
         self._hwHandle = hwHandle
         self._callback = callback
 
         '''
         System parameter
         '''
-        self._mode = 'BINARY-IN'
-        self._hwID
+        self._mode = 'BINARY-OUT'
+        self._hwid = 0
 
         '''
         Class variables
@@ -69,7 +69,7 @@ class binout(msgbus):
         '''
         self._hwHandle.ConfigIO(self._hwid,0)
 
-        self.msgbus_publish('LOG','%s VPM Module Mode: %s Created with vpmID: %s '%('DEBUG', self._mode, self._ID))
+        self.msgbus_publish('LOG','%s VPM Module Mode: %s Created with vpmID: %s '%('DEBUG', self._mode, self._VPM_ID))
 
         return True
 
@@ -79,6 +79,8 @@ class binout(msgbus):
         msg =  data type tree
         '''
         result = False
+        IN = 1
+        OUT = 0
 
         cfg = msg.select(self._VPM_ID)
 
@@ -96,15 +98,22 @@ class binout(msgbus):
         self._OFF_VALUE = str(cfg.getNode('OFF_VALUE','OFF'))
         self._ON_VALUE = str(cfg.getNode('ON_VALUE','ON'))
         self._INITIAL = str(cfg.getNode('INITIAL',None))
+        self._hwid = int(cfg.getNode('HWID',None))
+
+        if not self._hwid:
+            print('VPM::ERROR no HWID in config')
+        else:
+            print('VPM:', self._hwid)
+            self._hwHandle.ConfigIO(self._hwid,IN)
 
         '''
         set initial configuration
         '''
         if self._INITIAL == self._ON_VALUE:
-            self._hwHandle.WritePin(self._HWID, 1)
+            self._hwHandle.WritePin(self._hwid, 1)
             self._SavePinState  = 1
         else:
-            self._hwHandle.WritePin(self._HWID, 0)
+            self._hwHandle.WritePin(self._hwid, 0)
             self._SavePinState  = 0
             self.Set(self._INITIAL)
 
@@ -123,11 +132,11 @@ class binout(msgbus):
         Port set port polarity; value as defined in ON_VALUE or OFF_VALUE
         '''
         if self._ON_VALUE in value:
-            self._hwHandle.WritePin(self._HWID, 1)
+            self._hwHandle.WritePin(self._hwid, 1)
             self._SavePinState  = 1
 
         elif self._OFF_VALUE in value:
-            self._hwHandle.WritePin(self._HWID, 0)
+            self._hwHandle.WritePin(self._hwid, 0)
             self._SavePinState  = 0
 
         else:

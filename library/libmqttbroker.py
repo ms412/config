@@ -140,7 +140,15 @@ class mqttbroker(msgbus):
         return 0
 
     def on_log(self, client, userdata, level, buf):
-        print('MQTT: Log',client, userdata, level, buf)
+        '''
+        Test
+        :param client:
+        :param userdata:
+        :param level:
+        :param buf:
+        :return:
+        '''
+      #  print('MQTT: Log',client, userdata, level, buf)
         return True
 
     def create(self):

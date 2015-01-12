@@ -36,7 +36,7 @@ class configmodule(Thread,msgbus):
         while threadRun:
             time.sleep(3)
     #        print('config loop')
-            self.msgbus_publish('LOG','%s Configuration loop '%('WARNING'))
+         #   self.msgbus_publish('LOG','%s Configuration loop '%('WARNING'))
 
             while not self.msg_queue.empty():
                 self.on_msg(self.msg_queue.get())

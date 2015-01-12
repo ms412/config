@@ -73,11 +73,11 @@ class msgbroker(Thread,msgbus):
     def on_config(self,cfg_msg):
         broker = cfg_msg.select('BROKER')
         if not self._mqttbroker:
-            print('Messagebroker:: initial startup')
+         #   print('Messagebroker:: initial startup')
             self._mqttbroker = mqttbroker(broker.getTree())
             #print ('MEssagebroker: start new MQTT ',self._mqttbroker)
         else:
-            print ('MEssagebroker: New Configuration available restart broker',self._mqttbroker)
+           # print ('MEssagebroker: New Configuration available restart broker',self._mqttbroker)
             self._mqttbroker.reconfig(broker.getTree())
             #del self._mqttbroker
             #time.sleep(0.5)
@@ -88,13 +88,13 @@ class msgbroker(Thread,msgbus):
     def on_notify(self,msg):
 
         msg['MESSAGE'] = self._generate_header('NOTIFY')
-        print('messagebroker::msg broker',msg)
+     #   print('messagebroker::msg broker',msg)
         self._mqttbroker.tx_data(self._dict2json(msg))
        # self.msgbus_publish('MSG_TX',self._dict2json(msg))
         return True
 
     def on_data(self,msg):
-        print('ON_DATA:', msg)
+   #     print('ON_DATA:', msg)
         msg = self._json2dict(msg)
         msg_header = msg.get('MESSAGE',None)
         if msg_header:

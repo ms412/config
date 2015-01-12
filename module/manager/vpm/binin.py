@@ -47,7 +47,7 @@ class binin(msgbus):
         '''
         Class variables
         '''
-        self._pinstatesave = 0
+        self._pinstatesave = 'Unknown'
         self._T0 = time.time()
 
        # self._update = False
@@ -69,6 +69,7 @@ class binin(msgbus):
         print('VPM Mode:', self._mode,'ID', self._VPM_ID,'hw handle',self._hwHandle)
 
       #  self._hwHandle.ConfigIO(self._hwid,1)
+
        # self.msgbus_publish('LOG','%s VPM Module BINARY IN Setup Configuration: %s '%('INFO', self._VPM_CFG))    def setup(self):
 
 
@@ -101,9 +102,9 @@ class binin(msgbus):
         '''
         self._counter = self._counter +1
 
-        pinstate = self._hwHandle.ReadPin(self._hwid)
+        result = self._hwHandle.ReadPin(self._hwid)
 
-        if pinstate == 0:
+        if result == 0:
             pinstate = self._off_value
         else:
             pinstate = self._on_value
@@ -113,12 +114,14 @@ class binin(msgbus):
             If interval got definded, send messeg after each completed interval
             '''
             if (self._T0 + self._interval) < time.time():
+                print('Timeinterval', self._T0 + self._interval,'Actual',time.time())
                 self._T0 = time.time()
                 self.notify()
 
-
-        if pinstate != self._pinstatesave:
+        print('PinSave',self._pinstatesave,'PinAct',pinstate)
+        if not self._pinstatesave in pinstate:
             self._pinstatesave = pinstate
+            print ('Mo0dification detected')
 
             '''
             Pin State changed during two runs
@@ -142,19 +145,19 @@ class binin(msgbus):
         notify_msg['PORT_ID'] = self._VPM_ID
         notify_msg['VALUE'] = self._pinstatesave
         notify_msg['STATE'] = True
-
+        print ('Sent Notification:,',notify_msg)
         self._callback(notify_msg)
 
         return True
 
-    def request(msg):
+    def request(self,msg):
         '''
         request interface
         :param msg: dictionary anny value expected; will call notify interface to send an update of the current pin state
         :return:
         '''
-        msgtype = msg.get('GET',None)
 
+        #msgtype = msg.get('GET',None)
         self.notify()
 
         return True
