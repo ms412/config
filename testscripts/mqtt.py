@@ -12,7 +12,7 @@ class mqttclient(object):
 
     def __init__(self):
 
-        self._host = 'localhost'
+        self._host = '192.168.1.107'
         self._port = 1883
         self._sub_channel = '/subscribe'
         self._pub_channel = '/publish'
@@ -76,12 +76,14 @@ class mqttclient(object):
 
 
 if __name__ == '__main__':
-    MSG = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'BROKER':{'HOSTS':'localhost','PORTE':1883}}
+   # MSG = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'BROKER':{'HOSTS':'localhost','PORTE':1883}}
+   # MSG = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port1':{'TYPE':'GET'}}}}
+    MSG = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port9':{'TYPE':'SET','COMMAND':'ON'}}}}
 
     msgStr = json.dumps(MSG)
 
     broker = mqttclient()
-    broker.setpubchannel('/TEST')
+    broker.setpubchannel('/GPIO_1')
     broker.setsubchannel('/RECEIVER')
     broker.connect()
     broker.subscribe()

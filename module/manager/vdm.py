@@ -177,18 +177,20 @@ class vdm(Thread,msgbus):
         Selects only concerning information from Dictionary, in case it's not concerning this task we return
         '''
 
-        device = msg.get(self._DevName,None)
+      # device = msg.get(self._DevName,None)
+        print('VDM receive message',msg)
 
-        if not device:
-            self.msgbus_publish('LOG','%s VDM Request not for Device: %s'%'INFO',self._DevName)
-        else:
-            for k in device.keys():
-                port = self._VPMobj.get(k,None)
-                if not port:
-                    self.msgbus_publish('LOG','%s VDM Requested Port does not exist: %s in Device: %s'%'ERROR',k,self._DevName)
-                else:
-                    port.request(device.get(k))
-                    result = True
+        #if not device:
+         #   self.msgbus_publish('LOG','%s VDM Request not for Device: %s'%'INFO',self._DevName)
+        #    print('VDM Request not for this Device:',self._DevName,device)
+        #else:
+        for k in msg.keys():
+            port = self._VPMobj.get(k,None)
+            if not port:
+                self.msgbus_publish('LOG','%s VDM Requested Port does not exist: %s in Device: %s'%'ERROR',k,self._DevName)
+            else:
+                port.request(msg.get(k))
+                result = True
 
         return result
 

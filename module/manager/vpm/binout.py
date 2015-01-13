@@ -45,7 +45,7 @@ class binout(msgbus):
         '''
         Class variables
         '''
-        self._pinstatesave = 0
+        self._pin_save = 'Unknown'
         self._update = False
 
         '''
@@ -67,7 +67,7 @@ class binout(msgbus):
         '''
         configure port as output
         '''
-        self._hwHandle.ConfigIO(self._hwid,0)
+    #    self._hwHandle.ConfigIO(self._hwid,0)
 
         self.msgbus_publish('LOG','%s VPM Module Mode: %s Created with vpmID: %s '%('DEBUG', self._mode, self._VPM_ID))
 
@@ -78,7 +78,7 @@ class binout(msgbus):
         Configuration interface
         msg =  data type tree
         '''
-        result = False
+      #  result = False
         IN = 1
         OUT = 0
 
@@ -88,7 +88,7 @@ class binout(msgbus):
         mandatory values
         '''
         try:
-            self._hwID = int(cfg.getNode('HWID'))
+            self._hwid = int(cfg.getNode('HWID'))
         except:
             self.msgbus_publish(self._log,'%s VPM Port: %s Mandatory Parameter missing'%('ERROR',self._ID))
 
@@ -103,21 +103,21 @@ class binout(msgbus):
         if not self._hwid:
             print('VPM::ERROR no HWID in config')
         else:
-            print('VPM:', self._hwid)
-            self._hwHandle.ConfigIO(self._hwid,IN)
+           # print('VPM:', self._hwid)
+            self._hwHandle.ConfigIO(self._hwid,OUT)
 
         '''
         set initial configuration
         '''
         if self._INITIAL == self._ON_VALUE:
             self._hwHandle.WritePin(self._hwid, 1)
-            self._SavePinState  = 1
+            self._pin_save  = self._ON_VALUE
         else:
             self._hwHandle.WritePin(self._hwid, 0)
-            self._SavePinState  = 0
-            self.Set(self._INITIAL)
+            self._pin_save  =  self._OFF_VALUE
+         #   self.Set(self._INITIAL)
 
-        return result
+        return True
 
     def run(self):
         '''
@@ -127,20 +127,28 @@ class binout(msgbus):
 
         return True
 
-    def request(self,value):
+    def request(self,msg):
         '''
         Port set port polarity; value as defined in ON_VALUE or OFF_VALUE
         '''
+
+        msgtype = msg.get('TYPE',None)
+        value = msg.get('COMMAND',self._OFF_VALUE)
+        print('Set Request',msg,msgtype,value)
+
+
         if self._ON_VALUE in value:
             self._hwHandle.WritePin(self._hwid, 1)
-            self._SavePinState  = 1
+            self._pin_save  = self._ON_VALUE
 
         elif self._OFF_VALUE in value:
             self._hwHandle.WritePin(self._hwid, 0)
-            self._SavePinState  = 0
+            self._pin_save  = self._OFF_VALUE
 
         else:
             self.msgbus_publish(self._log,'%s VPM BinaryOut Port: %s Unknown value'%('ERROR',value))
+
+        self.notify()
 
         return True
 
@@ -149,7 +157,9 @@ class binout(msgbus):
         notify_msg= {}
 
         notify_msg['PORT_ID'] = self._VPM_ID
-        notify_msg['VALUE'] = self._pinstatesave
+        notify_msg['VALUE'] = self._pin_save
         notify_msg['STATE'] = True
 
         self._callback(notify_msg)
+
+        return True

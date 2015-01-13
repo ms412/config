@@ -94,6 +94,17 @@ class msgbroker(Thread,msgbus):
         return True
 
     def on_data(self,msg):
+        '''
+        :param msg:
+        :return:
+
+        in MESSAGE Header
+         -+ TYPE = CONFIG
+          -+MODE = ADD | DEL | NEW
+         -+TYPE = REQUEST
+          -+MODE = NONE
+
+        '''
    #     print('ON_DATA:', msg)
         msg = self._json2dict(msg)
         msg_header = msg.get('MESSAGE',None)

@@ -70,8 +70,10 @@ class mqttbroker(msgbus):
 
         self._host = str(config.get('HOST','localhost'))
         self._port = int(config.get('PORT',1883))
-        temp = str(config.get('SUBSCRIBE','/SUBSCRIBE'))
-        self._subscribe = temp.split(",")
+        #temp = str(config.get('SUBSCRIBE','/SUBSCRIBE'))
+        #self._subscribe = temp.split(",")
+
+        self._subscribe = str(config.get('SUBSCRIBE','/SUBSCRIBE'))
 
         self._publish = str(config.get('PUBLISH','/PUBLISH'))
 
@@ -136,7 +138,7 @@ class mqttbroker(msgbus):
         return 0
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
-        print('MQTT: Subscribed: '+str(mid)+' '+str(granted_qos))
+        print('MQTT: Subscribed: '+str(userdata)+' '+str(granted_qos))
         return 0
 
     def on_log(self, client, userdata, level, buf):
@@ -173,17 +175,8 @@ class mqttbroker(msgbus):
         print('dissconnect')
         self._mqttc.disconnect()
 
-    def subscribe(self,channel = None):
-        self._mqttc.subscribe('/HELP/',0)
-        if not channel:
-            #for item in self._subscribe:
-             #   self._mqttc.subscribe(item + str(item),0)
-            print('mqtt subscribe')
-
-        else:
-            print('mqtt subscribe by commandline',channel)
-            self._mqttc.subscribe(channel,0)
-
+    def subscribe(self):
+        self._mqttc.subscribe(self._subscribe,0)
         return True
 
 

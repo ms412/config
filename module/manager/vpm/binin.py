@@ -47,7 +47,7 @@ class binin(msgbus):
         '''
         Class variables
         '''
-        self._pinstatesave = 'Unknown'
+        self._pin_save = 'Unknown'
         self._T0 = time.time()
 
        # self._update = False
@@ -105,9 +105,9 @@ class binin(msgbus):
         result = self._hwHandle.ReadPin(self._hwid)
 
         if result == 0:
-            pinstate = self._off_value
+            pin_act = self._off_value
         else:
-            pinstate = self._on_value
+            pin_act = self._on_value
 
         if self._interval > 0:
             '''
@@ -118,9 +118,9 @@ class binin(msgbus):
                 self._T0 = time.time()
                 self.notify()
 
-        print('PinSave',self._pinstatesave,'PinAct',pinstate)
-        if not self._pinstatesave in pinstate:
-            self._pinstatesave = pinstate
+        print('PinSave',self._pin_save,'PinAct',pin_act)
+        if not self._pin_save in pin_act:
+            self._pin_save = pin_act
             print ('Mo0dification detected')
 
             '''
@@ -143,7 +143,7 @@ class binin(msgbus):
         notify_msg= {}
 
         notify_msg['PORT_ID'] = self._VPM_ID
-        notify_msg['VALUE'] = self._pinstatesave
+        notify_msg['VALUE'] = self._pin_save
         notify_msg['STATE'] = True
         print ('Sent Notification:,',notify_msg)
         self._callback(notify_msg)
@@ -157,7 +157,8 @@ class binin(msgbus):
         :return:
         '''
 
-        #msgtype = msg.get('GET',None)
+        msgtype = msg.get('TYPE',None)
+        print('Get Notification',msg,msgtype)
         self.notify()
 
         return True
