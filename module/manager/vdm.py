@@ -324,15 +324,26 @@ class vdm(Thread,msgbus):
         :return: true in case deletion was successful else False
         '''
 
-        result = False
+       # result = False
 
         print('VDM stop VPM instanced', device)
-        if len(device)> 0:
-            for port in device.getNodesKey():
-                self.msgbus_publish('LOG','%s Stop VPM Devices: %s , Port: %s '%('INFO', self._DevName, port))
-                del self._VPMobj[port]
-                result = True
-        return result
+        for port in device:
+            '''
+            stops each device in device list and stops each VDM device listed
+            '''
+            threadObj = self._VPMobj[port]
+            del threadObj
+            '''
+            deletes device from threadDictionary
+            '''
+            del self._VPMobj[port]
+
+   #     if len(device)> 0:
+    #        for port in device.getNodesKey():
+     #           self.msgbus_publish('LOG','%s Stop VPM Devices: %s , Port: %s '%('INFO', self._DevName, port))
+      #          del self._VPMobj[port]
+       #         result = True
+        return True
 
     def cfg_vpm(self,device):
         '''

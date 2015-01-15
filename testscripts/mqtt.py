@@ -76,18 +76,27 @@ class mqttclient(object):
 
 
 if __name__ == '__main__':
+    #ADD MQTT Broker
    # MSG = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'BROKER':{'HOSTS':'localhost','PORTE':1883}}
-   # MSG = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port1':{'TYPE':'GET'}}}}
-    MSG = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port9':{'TYPE':'SET','COMMAND':'ON'}}}}
-
-    msgStr = json.dumps(MSG)
+  #  MSG = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port1':{'TYPE':'GET','COMMAND':'GET'}}}}
+   # MSG = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port9':{'TYPE':'SET','COMMAND':'OFF'}}}}
+    #ADD configuration
+    msg_add1 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'DEVICES':{'MCP23017_2':{'Port5':{'HWID':5,'MODE':'BINARY-IN','INTERVAL':30}}}}
+    msg_del1 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'DEL'},'DEVICES':{'MCP23017_2':{'Port5':'','Port9':''}}}
+    msg_add2 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'DEVICES':{'MCP23017_1':{'Port8':{'HWID':8,'MODE':'BINARY-IN','INTERVAL':30},'SYSTEM':'RASPBERRY_B1','I2C_ADDRESS':'0x20','TYPE':'MCP23017','UPDATE':5}}}
+  # msgStr = json.dumps(MSG)
 
     broker = mqttclient()
     broker.setpubchannel('/GPIO_1')
     broker.setsubchannel('/RECEIVER')
     broker.connect()
     broker.subscribe()
-    broker.publish(msgStr)
+
+  #  input('Press Enter for add command..')
+    #broker.publish(json.dumps(msg_add))
+
+   # input('Press Enter for delete command..')
+    broker.publish(json.dumps(msg_add2))
 
     rc= 0
     while rc == 0:

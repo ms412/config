@@ -44,9 +44,14 @@ class mqttbroker(msgbus):
 
     def reconfig(self,config):
         print('MQTT::recondfig')
-        self._mqttc.disconnect()
+        time.sleep(1)
+        self.unsubscribe()
+        self.disconnect()
+        time.sleep(1)
         self.reinitialise()
+        time.sleep(1)
         self.setup(config)
+
         return True
 
     def setup(self,config):
@@ -119,7 +124,7 @@ class mqttbroker(msgbus):
        #     self.msgbus_publish('LOG','%s Broker: Lost Connection to MQTT:%s '%('INFO',conn_state))
         #    self._mqttc.connect(self._host, self._port, 60)
 
-        return 0
+        return True
 
     def on_message(self, client, userdata, msg):
         print('Mqtt received: ',msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
@@ -131,15 +136,19 @@ class mqttbroker(msgbus):
         message.update({'MESSAGE':msg.payload})
         self.msgbus_publish('LOG','%s Broker: received Date Device: %s , Port: %s , Message: %s'%('INFO',message['CHANNEL'], message['PORT_NAME'], message['MESSAGE']))
         self._rxQueue.put(message)
-        return 0
+        return True
 
     def on_publish(self, client, userdata, mid):
         print('MQTT on_published '+str(mid))
-        return 0
+        return True
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
         print('MQTT: Subscribed: '+str(userdata)+' '+str(granted_qos))
-        return 0
+        return True
+
+    def on_unsubscribe(self, client, userdata, mid):
+        print('MQTT:: unsubscribe',client, userdata,mid)
+        return True
 
     def on_log(self, client, userdata, level, buf):
         '''
@@ -161,6 +170,7 @@ class mqttbroker(msgbus):
     def reinitialise(self):
         print('mqtt reinitialise')
         self._mqttc.reinitialise(str(os.getpid()), clean_session=True)
+
         return True
 
     def connect(self):
@@ -174,16 +184,21 @@ class mqttbroker(msgbus):
     def disconnect(self):
         print('dissconnect')
         self._mqttc.disconnect()
+        return True
 
     def subscribe(self):
         self._mqttc.subscribe(self._subscribe,0)
         return True
 
+    def unsubscribe(self):
+        self._mqttc.unsubscribe(self._subscribe)
+        return True
 
     def publish(self,message):
         print('Publish:',message)
      #   self._mqttc.publish(message)
         self._mqttc.publish(self._publish, message, 0)
+        return True
 
 
 if __name__ == "__main__":

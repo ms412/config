@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Thread
 
 from library.libmsgbus import msgbus
-from library.libtree import tree
+from library.libtree_old import tree
 from library.libmqttbroker import mqttbroker
 
 class msgbroker(Thread,msgbus):
@@ -107,7 +107,10 @@ class msgbroker(Thread,msgbus):
         '''
    #     print('ON_DATA:', msg)
         msg = self._json2dict(msg)
+
         msg_header = msg.get('MESSAGE',None)
+        del msg['MESSAGE']
+
         if msg_header:
             msg_type = msg_header.get('TYPE',None)
 

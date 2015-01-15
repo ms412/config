@@ -2,11 +2,12 @@
 import yaml
 import json
 import time
+import datetime
 from queue import Queue
 
 from threading import Thread, Lock
 
-from library.libtree import tree
+from library.libtree_old import tree
 from library.libmsgbus import msgbus
 
 class configmodule(Thread,msgbus):
@@ -44,6 +45,9 @@ class configmodule(Thread,msgbus):
             while not self.add_queue.empty():
                 self.on_add(self.add_queue.get())
 
+            while not self.del_queue.empty():
+                self.on_del(self.del_queue.get())
+
         return True
 
      def _on_msg(self,msg):
@@ -69,14 +73,18 @@ class configmodule(Thread,msgbus):
      def on_add(self,msg):
          self.msgbus_publish('LOG','%s CONFIG: ADD Message received %s'%('TRACE',msg))
          self._rootPtr.merge(msg)
-         self.saveFile('TEST')
+         ts = time.time()
+         time_stamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H:%M')
+         self.saveFile(self.cfg_file+'_'+time_stamp)
          self.publishUpdate(self._rootPtr)
          return True
 
      def on_del(self,msg):
          self.msgbus_publish('LOG','%s CONFIG: DEL Message received %s'%('TRACE',msg))
-         self._rootPtr.delte(msg)
-         self.saveFile('TEST')
+         self._rootPtr.delete(msg)
+         ts = time.time()
+         time_stamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H:%M')
+         self.saveFile(self.cfg_file+'_'+time_stamp)
          self.publishUpdate(self._rootPtr)
          return True
 
@@ -108,7 +116,7 @@ class configmodule(Thread,msgbus):
          return self._rootPtr
 
      def loadDict(self,dictCfg):
-         return self._create(dictCfg)
+         return self.createTree(dictCfg)
 
      def loadJson(self,jsonstr):
          '''
@@ -162,9 +170,9 @@ if __name__ == '__main__':
      y = x.select('A1')
      print('kk',y)
      print('Debug',y.debug())
-     y.delNode('A11')
+   #  y.delNode('A11')
      print('Delete Node',y.debug())
-     y.addLeaf('A14','V14')
+   #  y.addLeaf('A14','V14')
      print('Add Leaf',y.debug())
      print('Tree',r.debug())
      y.merge(B)

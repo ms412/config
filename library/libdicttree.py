@@ -107,6 +107,10 @@ class Tree(DictTreeLib):
         self.treePointer = self.treeRoot
         return True
 
+    def loadDict(self,dict):
+        self.treeRoot = dict
+        self.treePointer = self.treeRoot
+
     def list(self):
         return self.treePointer.listNode()
 
@@ -116,6 +120,7 @@ class Tree(DictTreeLib):
     def test(self,path):
         help = self.select(path)
         return self.__class__(help)
+
     def select(self,path):
         '''
         selects a subtree of the tree
@@ -144,9 +149,11 @@ class Tree(DictTreeLib):
         self.treePointer = DictTreeLib(self.config)
 
     def merge(self,dict):
-        return self._merge(self.config,dict)
+       # print('printtree',self.treeRoot.getTree())
+        return self._merge(self.treeRoot.getTree(),dict)
 
     def _merge(self, dict1, dict2):
+        print('Merge',dict1,dict2)
         """ Recursively merges dict2 into dict1 """
         if not isinstance(dict1, dict) or not isinstance(dict2, dict):
             return dict2
@@ -159,7 +166,10 @@ class Tree(DictTreeLib):
         return dict1
 
     def delete(self,dict):
-        return self._delete(self.config,dict)
+
+        return self._delete_new(self.treeRoot.getTree(),dict)
+
+        #return self._delete(self.config,dict)
 
     def _delete_old(self, dict1,dict2):
         print('Debug1',dict1,dict2)
@@ -180,7 +190,7 @@ class Tree(DictTreeLib):
         return dict1
 
     def _delete(self,dict1,dict2):
-
+        print('Debug',dict1,dict2)
         for k in dict2:
             if k in dict1:
                 if not dict2[k]:
@@ -188,6 +198,21 @@ class Tree(DictTreeLib):
                 else:
                     self._delete(dict1[k],dict2[k])
         return dict1
+
+    def _delete_new(self,dict1,dict2):
+        print('¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦')
+        print('Debug new:',dict1, dict2)
+        for key,value in dict2.items():
+            if isinstance(value,dict):
+                temp1 = dict1.get(key)
+                temp2 = dict2.get(key)
+                self._delete_new(temp1,temp2)
+            else:
+                print('Delete',key)
+                del dict1[key]
+
+        return
+
 
     def leafPath(self,tree):
         '''
@@ -232,23 +257,38 @@ class Tree(DictTreeLib):
 
 if __name__ == '__main__':
 
+    add_dict = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'DEVICES':{'MCP23017_2':{'Port5':{'HWID':5,'MODE':'BINARY-IN','INTERVAL':30}}}}
+    del_dict1 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'DEL'},'DEVICES':{'MCP23017_2':{'Port5':''}}}
+    del_dict2 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'DEL'},'DEVICES':{'MCP23017_2':{'Port5':'','Port2':''}}}
+    del_dict3 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'DEL'},'DEVICES':{'MCP23017_2':''}}
+
     cfg = Tree()
-    cfg.openYaml('config.yaml')
+    cfg.openYaml('../config/config.yaml')
+
+
 #    cfg.reset()
   #  cfg.select('DEVICES.DEVICE03.PORT300')
-  #  print('Cfg:',cfg.list())
+    print('Cfg:',cfg.list())
+
+    cfg.merge(add_dict)
+    print('Debug')
+    cfg.debug()
+    print('Delete Subtree')
+    cfg.delete(del_dict3)
+    print('Debug')
+    cfg.debug()
 
    # cfg.delet('NAME')
    # cfg.add('test','value')
-    print('Compare Test')
+  #  print('Compare Test')
   #  print('List1',cfg.list())
-    cfg.reset()
+  #  cfg.reset()
   #  print('List2',cfg.list())
    # cfg.compare(A)
   #  cfg.compareX(A)
-    print('List',list(cfg.leafPath(A)))
+   # print('List',list(cfg.leafPath('BINARY-OUT')))
   #  print('Print',cfg.leafPath(A))
-    for item in cfg.leafPath(A):
+  #  for item in cfg.leafPath(A):
         #print('Item',item,len(item))
-        cfg.testNode2(list(item))
-    cfg.saveYaml('newtree')
+   #     cfg.testNode2(list(item))
+   # cfg.saveYaml('newtree')

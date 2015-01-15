@@ -56,6 +56,7 @@ class binout(msgbus):
         self.setup()
 
     def __del__(self):
+        print('kill myself',self._VPM_ID)
         self.msgbus_publish('LOG','%s VPM Module Mode: %s Destroying myself: %s '%('INFO', self._mode, self._VPM_ID))
 
     def setup(self):
@@ -133,20 +134,20 @@ class binout(msgbus):
         '''
 
         msgtype = msg.get('TYPE',None)
-        value = msg.get('COMMAND',self._OFF_VALUE)
-        print('Set Request',msg,msgtype,value)
+        cmd = msg.get('COMMAND',self._OFF_VALUE)
+        print('Set Request',msg,msgtype,cmd)
 
-
-        if self._ON_VALUE in value:
-            self._hwHandle.WritePin(self._hwid, 1)
-            self._pin_save  = self._ON_VALUE
-
-        elif self._OFF_VALUE in value:
-            self._hwHandle.WritePin(self._hwid, 0)
-            self._pin_save  = self._OFF_VALUE
-
+        if 'SET' in msgtype:
+            if self._ON_VALUE in cmd:
+                self._hwHandle.WritePin(self._hwid, 1)
+                self._pin_save  = self._ON_VALUE
+            elif self._OFF_VALUE in cmd:
+                self._hwHandle.WritePin(self._hwid, 0)
+                self._pin_save  = self._OFF_VALUE
+            else:
+                self.msgbus_publish('LOG','%s VPM BinaryOut Port: %s Unknown value'%('ERROR',cmd))
         else:
-            self.msgbus_publish(self._log,'%s VPM BinaryOut Port: %s Unknown value'%('ERROR',value))
+            print('Messagetype unknown',msgtype)
 
         self.notify()
 

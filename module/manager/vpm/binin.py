@@ -60,6 +60,7 @@ class binin(msgbus):
         self.setup()
 
     def __del__(self):
+        print('kill myself',self._VPM_ID)
         self.msgbus_publish('LOG','%s VPM Module Mode: %s Destroying myself: %s '%('INFO', self._mode, self._VPM_ID))
 
     def setup(self):
@@ -158,7 +159,15 @@ class binin(msgbus):
         '''
 
         msgtype = msg.get('TYPE',None)
+        cmd = msg.get('COMMAND',None)
         print('Get Notification',msg,msgtype)
-        self.notify()
+
+        if 'GET' in msgtype:
+            if 'GET' in cmd:
+                self.notify()
+            else:
+                print ('Command unknown')
+        else:
+            print('Messagetype unknown')
 
         return True
