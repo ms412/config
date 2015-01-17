@@ -60,19 +60,20 @@ class binin(msgbus):
         self.setup()
 
     def __del__(self):
-        print('kill myself',self._VPM_ID)
-        self.msgbus_publish('LOG','%s VPM Module Mode: %s Destroying myself: %s '%('INFO', self._mode, self._VPM_ID))
+        #print('kill myself',self._VPM_ID)
+        logmsg ='Kill myself'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s Message: %s'%('CRITICAL', self._mode, self._VPM_ID, logmsg))
 
     def setup(self):
         '''
         configure port as input port
         '''
-        print('VPM Mode:', self._mode,'ID', self._VPM_ID,'hw handle',self._hwHandle)
+       # print('VPM Mode:', self._mode,'ID', self._VPM_ID,'hw handle',self._hwHandle)
 
       #  self._hwHandle.ConfigIO(self._hwid,1)
 
-       # self.msgbus_publish('LOG','%s VPM Module BINARY IN Setup Configuration: %s '%('INFO', self._VPM_CFG))    def setup(self):
-
+        logmsg = 'Startup'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
 
         return True
 
@@ -81,8 +82,9 @@ class binin(msgbus):
         :param msg: contains configuration as a tree object
         :return:
         '''
-        IN = 1
-        OUT = 0
+
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s Message: %s'%('INFO', self._mode, self._VPM_ID, msg))
+
         cfg = msg.select(self._VPM_ID)
         print('Config interface')
         self._off_value = str(cfg.getNode('OFF_VALUE','OFF'))
@@ -91,10 +93,12 @@ class binin(msgbus):
         self._hwid = int(cfg.getNode('HWID',None))
 
         if not self._hwid:
-            print('VPM::ERROR no HWID in config')
+            logmsg = 'HWID is missing in config'
+            self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
+           # print('VPM::ERROR no HWID in config')
         else:
-            print('VPM:', self._hwid)
-            self._hwHandle.ConfigIO(self._hwid,IN)
+        #    print('VPM:', self._hwid)
+            self._hwHandle.ConfigIO(self._hwid,'IN')
         return True
 
     def run(self):
@@ -103,6 +107,9 @@ class binin(msgbus):
         '''
         self._counter = self._counter +1
 
+        '''
+        read pin state
+        '''
         result = self._hwHandle.ReadPin(self._hwid)
 
         if result == 0:
@@ -110,34 +117,36 @@ class binin(msgbus):
         else:
             pin_act = self._on_value
 
+        '''
+        if a update interval defined, send notification message after each completed interval
+        '''
         if self._interval > 0:
-            '''
-            If interval got definded, send messeg after each completed interval
-            '''
             if (self._T0 + self._interval) < time.time():
-                print('Timeinterval', self._T0 + self._interval,'Actual',time.time())
+              #  print('Timeinterval', self._T0 + self._interval,'Actual',time.time())
                 self._T0 = time.time()
+                logmsg = ' Timeinterval expired'
+                self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
                 self.notify()
 
-        print('PinSave',self._pin_save,'PinAct',pin_act)
+       # print('PinSave',self._pin_save,'PinAct',pin_act)
+        '''
+        if Pin State changed notification has to be changed
+        '''
         if not self._pin_save in pin_act:
             self._pin_save = pin_act
-            print ('Mo0dification detected')
-
-            '''
-            Pin State changed during two runs
-            now we have to send notification
-            '''
+            logmsg = 'Pin change detected'
+            self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
             self.notify()
 
         return True
 
-    def notify(self):
+    def notify(self,msg=None):
         '''
         in case potential of the pin changed, a notification will be emitted
         :return: dictionary
         PORT_ID = unique port name
         VALUE = current state of Pin
+        MSG = message to user (optional)
         STATE = whether value is true or false
         '''
 
@@ -145,8 +154,13 @@ class binin(msgbus):
 
         notify_msg['PORT_ID'] = self._VPM_ID
         notify_msg['VALUE'] = self._pin_save
+        if msg:
+            notify_msg['MSG'] = msg
         notify_msg['STATE'] = True
-        print ('Sent Notification:,',notify_msg)
+      #  print ('Sent Notification:,',notify_msg)
+        logmsg = 'Notification send to VDM'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, notify_msg))
+
         self._callback(notify_msg)
 
         return True
@@ -161,13 +175,19 @@ class binin(msgbus):
         msgtype = msg.get('TYPE',None)
         cmd = msg.get('COMMAND',None)
         print('Get Notification',msg,msgtype)
+        logmsg = 'Notification received'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, msg))
 
         if 'GET' in msgtype:
             if 'GET' in cmd:
                 self.notify()
             else:
-                print ('Command unknown')
+                logmsg = 'Command unknown'
+                self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('ERROR', self._mode, self._VPM_ID, logmsg, cmd))
+          #      print ('Command unknown')
         else:
-            print('Messagetype unknown')
+            logmsg = 'Messagetype unknown'
+            self.msgbus_publish('LOG','%s Mode: %s ID: %s; Message: %s , %s'%('ERROR', self._mode, self._VPM_ID, logmsg, msgtype))
+            #print('Messagetype unknown')
 
         return True

@@ -91,9 +91,9 @@ class tree(object):
          return dict1
 
      def delete(self,dict):
-         return self._delete_new(self._treeObj,dict)
+         return self._delete(self._treeObj,dict)
 
-     def _delete(self,dict1,dict2):
+     def _delete_oldold(self,dict1,dict2):
          print('Dict1',dict1,'Dict2',dict2)
 
          if not isinstance(dict2,dict):
@@ -110,17 +110,18 @@ class tree(object):
          print('Return',dict1)
          return dict1
 
-     def _delete_new(self,dict1,dict2):
-         print('¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦')
-         print('Debug new:',dict1, dict2)
+     def _delete(self,dict1,dict2):
+       # print('¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦')
+        # print('Debug new:',dict1, dict2)
          for key,value in dict2.items():
             if isinstance(value,dict):
                 temp1 = dict1.get(key)
                 temp2 = dict2.get(key)
-                self._delete_new(temp1,temp2)
+                self._delete(temp1,temp2)
             else:
-                print('Delete',key)
-                del dict1[key]
+         #       print('Delete',key)
+               # del dict1[key]
+                dict1.pop(key,None)
          return True
 
      def leafPath(self):

@@ -77,14 +77,14 @@ class MCP23017(object):
     def ConfigIO(self,ioPin,iodir):
         """ Setup ioPin configuration
             ioPin = pin 0...15 as integer
-            iodir = 0 output / 1 input
+            iodir = OUT / IN
         """
     #    self._loghandle.debug('mcp23017Driver::ConfigIO, ioPin-number: %d Direction: %s",ioPin,iodir')
 
         if ioPin <= 7:
             temp = self._i2c.Read(self._i2cAdd,self._IODIRA)
 
-            if iodir == 1:
+            if 'IN' in iodir:
                 temp = self._bit.setBit(temp,ioPin)
             else:
                 temp = self._bit.clearBit(temp,ioPin)
@@ -95,7 +95,7 @@ class MCP23017(object):
         else:
             ioPin = ioPin -8
             temp = self._i2c.Read(self._i2cAdd,self._IODIRB)
-            if iodir == 1:
+            if 'IN' in iodir:
                 temp = self._bit.setBit(temp,ioPin)
             else:
                 temp = self._bit.clearBit(temp,ioPin)

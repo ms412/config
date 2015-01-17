@@ -80,8 +80,8 @@ class binout(msgbus):
         msg =  data type tree
         '''
       #  result = False
-        IN = 1
-        OUT = 0
+       # IN = 1
+        #OUT = 0
 
         cfg = msg.select(self._VPM_ID)
 
@@ -105,7 +105,7 @@ class binout(msgbus):
             print('VPM::ERROR no HWID in config')
         else:
            # print('VPM:', self._hwid)
-            self._hwHandle.ConfigIO(self._hwid,OUT)
+            self._hwHandle.ConfigIO(self._hwid,'OUT')
 
         '''
         set initial configuration
@@ -125,6 +125,7 @@ class binout(msgbus):
         Run Task
         '''
         self._counter = self._counter +1
+
 
         return True
 
@@ -153,14 +154,17 @@ class binout(msgbus):
 
         return True
 
-    def notify(self):
+    def notify(self,msg=None):
 
         notify_msg= {}
 
         notify_msg['PORT_ID'] = self._VPM_ID
         notify_msg['VALUE'] = self._pin_save
+        if msg:
+            notify_msg['MSG'] = msg
         notify_msg['STATE'] = True
 
         self._callback(notify_msg)
 
         return True
+

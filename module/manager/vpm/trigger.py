@@ -4,6 +4,8 @@ import time
 
 from library.libmsgbus import msgbus
 
+#from module.manager.vdm import vdm
+
 class trigger(msgbus):
     '''
     Mandatory values
@@ -43,11 +45,14 @@ class trigger(msgbus):
         self._hwid = 0
 
         '''
-        Class variables
+        Define class variables
         '''
-        self._pinstatesave = 0
-        self._T0 = time.time()
-        self._T1 = 0
+        self._pin_save = 'Unknown'
+        #self._T0 = time.time()
+        self._T1 = 0.0
+        self._trigger_act = False
+
+
        # self._update = False
 
         '''
@@ -58,17 +63,18 @@ class trigger(msgbus):
         self.setup()
 
     def __del__(self):
-        self.msgbus_publish('LOG','%s VPM Module Mode: %s Destroying myself: %s '%('INFO', self._mode, self._VPM_ID))
+        logmsg ='Kill myself'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s Message: %s'%('CRITICAL', self._mode, self._VPM_ID, logmsg))
+      #  print('kill myself',self._VPM_ID)
+       # self.msgbus_publish('LOG','%s VPM Mode: %s Destroying myself: %s '%('CRITICAL', self._mode, self._VPM_ID))
 
     def setup(self):
         '''
-        configure port as output
+        configure port as input port
         '''
-        self._hwHandle.ConfigIO(self._hwid,0)
 
-       # self.msgbus_publish('LOG','%s VPM Module BINARY IN Setup Configuration: %s '%('INFO', self._VPM_CFG))    def setup(self):
-
-        print('VPM Mode:', self._mode,'ID', self._VPM_ID)
+        logmsg = 'Startup'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
 
         return True
 
@@ -77,16 +83,34 @@ class trigger(msgbus):
         :param msg: contains configuration as a tree object
         :return:
         '''
+
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s Message: %s'%('INFO', self._mode, self._VPM_ID, msg))
+
         cfg = msg.select(self._VPM_ID)
         print('Config interface')
         self._off_value = str(cfg.getNode('OFF_VALUE','OFF'))
         self._on_value = str(cfg.getNode('ON_VALUE','ON'))
-        self._puls_length = float(cfg.getNode('PULS_LENGTH',2))
-
+        self._puls_length = float(cfg.getNode('PULS_LENGTH',10))
+        self._initial = str(cfg.getNode('INITIAL',None))
         self._hwid = int(cfg.getNode('HWID',None))
 
         if not self._hwid:
-            print('VPM::ERROR no HWID in config')
+            logmsg = 'HWID is missing in config'
+            self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
+           # print('VPM::ERROR no HWID in config')
+        else:
+        #    print('VPM:', self._hwid)
+            self._hwHandle.ConfigIO(self._hwid,'OUT')
+
+        '''
+        set initial configuration
+        '''
+        if self._initial == self._on_value:
+            self._hwHandle.WritePin(self._hwid, 1)
+            self._pin_save  = self._on_value
+        else:
+            self._hwHandle.WritePin(self._hwid, 0)
+            self._pin_save  =  self._off_value
 
         return True
 
@@ -96,60 +120,102 @@ class trigger(msgbus):
         '''
         self._counter = self._counter +1
 
-        pinstate = self._hwHandle.ReadPin(self._hwid)
 
-        if pinstate == 0:
-            pinstate = self._off_value
-        else:
-            pinstate = self._on_value
+        '''
+        Pin can be reseated to initial value if T1 is exceeded
+        '''
 
-        if self._interval > 0:
-            '''
-            If interval got definded, send messeg after each completed interval
-            '''
-            if (self._T0 + self._interval) < time.time():
-                self._T0 = time.time()
-                self.notify()
+        if self._trigger_act == True:
+
+            if self._T1 < time.time():
+                self.notify('Trigger executed')
+                self._trigger_act = False
+                '''
+                reset initial configuration
+                '''
+                if self._initial == self._on_value:
+                    self._hwHandle.WritePin(self._hwid, 1)
+                    self._pin_save  = self._on_value
+                else:
+                    self._hwHandle.WritePin(self._hwid, 0)
+                    self._pin_save  =  self._off_value
 
 
-        if pinstate != self._pinstatesave:
-            self._pinstatesave = pinstate
-
-            '''
-            Pin State changed during two runs
-            now we have to send notification
-            '''
-            self.notify()
 
         return True
 
-    def notify(self):
+    def notify(self,msg=None):
         '''
         in case potential of the pin changed, a notification will be emitted
         :return: dictionary
         PORT_ID = unique port name
-        VALUE = current state of Pin
+        MSG = message to user (optional)
         STATE = whether value is true or false
         '''
+
+        '''
+        Read current pin state
+        '''
+        result = self._hwHandle.ReadPin(self._hwid)
+        if result == 0:
+            pin_act = self._off_value
+        else:
+            pin_act = self._on_value
 
         notify_msg= {}
 
         notify_msg['PORT_ID'] = self._VPM_ID
-        notify_msg['VALUE'] = self._pinstatesave
+        notify_msg['VALUE'] = pin_act
+        if msg:
+            notify_msg['MSG'] = msg
         notify_msg['STATE'] = True
+
+      #  print ('Sent Notification:,',notify_msg)
+        logmsg = 'Notification send to VDM'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, notify_msg))
 
         self._callback(notify_msg)
 
         return True
 
-    def request(msg):
+    def request(self,msg):
         '''
         request interface
         :param msg: dictionary anny value expected; will call notify interface to send an update of the current pin state
         :return:
         '''
-        msgtype = msg.get('GET',None)
 
-        self.notify()
+        msgtype = msg.get('TYPE',None)
+        cmd = msg.get('COMMAND',None)
+        puls_length = float(msg.get('PULS_LENGTH',-1))
+      #  print('Get Notification',msg,msgtype)
+        logmsg = 'Notification received'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, msg))
+
+        if 'SET' in msgtype:
+            if self._on_value in cmd:
+                self._trigger_act = True
+                self._hwHandle.WritePin(self._hwid, 1)
+                self._pin_save  = self._on_value
+                if puls_length < 1:
+                    self._T1 = time.time() + self._puls_length
+                else:
+                    self._T1 = time.time() + puls_length
+            elif self._off_value in cmd:
+                self._trigger_act = True
+                self._hwHandle.WritePin(self._hwid, 0)
+                self._pin_save  = self._off_value
+                if puls_length < 1:
+                    self._T1 = time.time() + self._puls_length
+                else:
+                    self._T1 = time.time() + puls_length
+            else:
+                logmsg = 'Command unknown'
+                self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('ERROR', self._mode, self._VPM_ID, logmsg, cmd))
+          #      print ('Command unknown')
+        else:
+            logmsg = 'Messagetype unknown'
+            self.msgbus_publish('LOG','%s Mode: %s ID: %s; Message: %s , %s'%('ERROR', self._mode, self._VPM_ID, logmsg, msgtype))
+            #print('Messagetype unknown')
 
         return True
