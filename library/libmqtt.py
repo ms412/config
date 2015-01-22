@@ -37,10 +37,27 @@ class mqttbroker(msgbus):
         #self._mqttc = mqtt.Client(str(os.getpid()))
 
         self.setup(self._config)
+        self.start()
 
     def __del__(self):
         print("Delete libmqttbroker")
         self._mqttc.disconnect()
+
+    def start(self):
+        print('MQTT::start')
+        '''
+        start broker
+        '''
+        self._mqttc=self.create()
+        self.callback()
+        self.connect(self._host,self._port)
+        #time.sleep(5)
+        for item in self._subscribe:
+            print('subscribe:',item)
+            self.subscribe(item)
+           # self.subscribe('/TEST/#')
+            time.sleep(5)
+        return True
 
     def restart(self,config):
         print('MQTT::restart')
@@ -52,20 +69,6 @@ class mqttbroker(msgbus):
         self.reinitialise()
         time.sleep(1)
         self.start()
-
-        return True
-
-    def start(self):
-        print('MQTT::start')
-        '''
-        start broker
-        '''
-        self._mqttc=self.create()
-        self.callback()
-        self.connect(self._host,self._port)
-        for item in self._subscribe:
-            self.subscribe(item)
-
         return True
 
     def callback(self):
@@ -83,15 +86,6 @@ class mqttbroker(msgbus):
     def setup(self,config):
         print ('MQTT::Setup libmqttbroker:',self._config)
 
-        '''
-        setup callbacks
-        '''
-     #   self._mqttc.on_message = self.on_message
-      #  self._mqttc.on_connect = self.on_connect
-      #  self._mqttc.on_publish = self.on_publish
-      #  self._mqttc.on_subscribe = self.on_subscribe
-      #  self._mqttc.on_disconnect = self.on_disconnect
-      #  self._mqttc.on_log = self.on_log
 
         '''
         broker Configuration
@@ -103,63 +97,58 @@ class mqttbroker(msgbus):
         self._port = int(config.get('PORT',1883))
         #temp = str(config.get('SUBSCRIBE','/SUBSCRIBE'))
         #self._subscribe = temp.split(",")
+        self._subscribe = []
 
-        self._subscribe = config.get('SUBSCRIBE',None)
+        temp = str(config.get('SUBSCRIBE',None))
+        if temp:
+            temp += '#'
+            self._subscribe.append(temp)
 
-        self._publish = str(config.get('PUBLISH','/PUBLISH'))
+        temp = str(config.get('CONFIG',None))
+        if temp:
+            temp += '#'
+            self._subscribe.append(temp)
 
-        '''
-        start broker
-        '''
-    #    self.connect(self._host,self._port)
-     #   for item in self._subscribe:
-      #      self.subscribe(item)
+        print('Subscribelist:', self._subscribe)
+
+       # self._publish = str(config.get('PUBLISH','/PUBLISH'))
         return True
+
 
     def run(self):
         self._mqttc.loop_start()
 
     def tx_data(self,message):
-        self.publish(message)
         print('Transmitt message,',message)
+        self.publish(message)
+
 
         return True
 
     def rx_data(self):
-
         if not self._rxQueue.empty():
             msg = self._rxQueue.get()
-            message = msg.get('MESSAGE',None)
-            channel = msg.get('CHANNEL',None)
+         #   message = msg.get('MESSAGE',None)
+          #  channel = msg.get('CHANNEL',None)
         else:
-            message = None
-            channel = None
+            msg = None
+           # channel = None
 
-        return (message,channel)
+        return msg
 
 
     def on_connect(self, client, userdata, flags, rc):
         print('MQTT:: connect to host:', self._host,str(rc))
         self._connectState = True
-        self.msgbus_publish('LOG','%s Broker: Connected %s'%('INFO', self._connectState))
-
+    #    self.msgbus_publish('LOG','%s Broker: Connected %s'%('INFO', self._connectState))
         return True
 
     def on_disconnect(self, client, userdata, rc):
         print('Mqtt:: Disconnect', userdata, rc)
-    #    self._connectState = False
-     #   if rc != 0:
-      #      conn_state = 'Unexpected'
-       #     self.msgbus_publish('LOG','%s Broker: Lost Connection to MQTT:%s '%('INFO',conn_state))
-        #    self._mqttc.connect(self._host, self._port, 60)
-
         return True
 
     def on_message(self, client, userdata, msg):
-    #    print('Mqtt received: ',msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
         message ={}
-       # print('RECEIVE',msg.topic, msg.payload)
-        #list_topic = msg.topic.split("/")
         message.update({'CHANNEL':msg.topic})
         message.update({'MESSAGE':msg.payload})
         print('Receive',message)
@@ -203,9 +192,6 @@ class mqttbroker(msgbus):
         return True
 
     def connect(self,host,port):
-      #  print ('mqtt connected')
-        #self._mqttc.connect('localhost')
-
         self._mqttc.connect(host, port,60)
         self._mqttc.loop_start()
         return True
@@ -216,9 +202,7 @@ class mqttbroker(msgbus):
         return True
 
     def subscribe(self,channel = None):
-      #  if not channel:
-       #for item in self._subscribe:
-        #    print('Subscribe',item)
+        print('mqqtt subscribe',channel)
         self._mqttc.subscribe(channel,0)
         return True
 
@@ -227,20 +211,14 @@ class mqttbroker(msgbus):
         return True
 
     def publish(self,message):
-
-      #        message.update({'CHANNEL':msg.topic})
-       # message.update({'MESSAGE':msg.payload})
-       # print('Receive',message)
-        #print('Publish:',message)
-     #   self._mqttc.publish(message)
         self._mqttc.publish(message.get('CHANNEL'), message.get('MESSAGE'), 0)
         return True
 
 if __name__ == "__main__":
 
-    config1 = {'HOST':'192.168.1.107','PUBLISH':'/TEST','SUBSCRIBE':['/TEST/#','/TEST2']}
-    config2 = {'HOST':'192.168.1.107','PUBLISH':'/TEST','SUBSCRIBE':['/TEST1/#','/TEST3','/TEST4']}
-    msg = {'CHANNEL':'/TTT','MESSAGE':'{ioioookko}'}
+    config1 = {'HOST':'localhost','PUBLISH':'/TEST','SUBSCRIBE':['/TEST/#','/TEST2']}
+    config2 = {'HOST':'localhost','PUBLISH':'/TEST','SUBSCRIBE':['/TEST1/#','/TEST3','/TEST4']}
+    msg = {'CHANNEL':'/TEST/CONFIG','MESSAGE':'{ioioookko}'}
     broker = mqttbroker(config1)
   #  broker = setup(config)
     broker.start()
