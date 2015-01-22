@@ -7,7 +7,7 @@ from queue import Queue
 
 from threading import Thread, Lock
 
-from library.libtree_old import tree
+from library.libtree import tree
 from library.libmsgbus import msgbus
 
 class configmodule(Thread,msgbus):
@@ -35,7 +35,7 @@ class configmodule(Thread,msgbus):
         threadRun = True
 
         while threadRun:
-            time.sleep(3)
+            time.sleep(1)
     #        print('config loop')
          #   self.msgbus_publish('LOG','%s Configuration loop '%('WARNING'))
 

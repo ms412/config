@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Thread
 
 from library.libmsgbus import msgbus
-from library.libtree_old import tree
+from library.libtree import tree
 
 
 class msgbroker(Thread,msgbus):

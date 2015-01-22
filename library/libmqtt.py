@@ -34,7 +34,7 @@ class mqttbroker(msgbus):
         create mqtt session
         '''
         #self.create()
-        self._mqttc = mqtt.Client(str(os.getpid()))
+        #self._mqttc = mqtt.Client(str(os.getpid()))
 
         self.setup(self._config)
 
@@ -42,21 +42,33 @@ class mqttbroker(msgbus):
         print("Delete libmqttbroker")
         self._mqttc.disconnect()
 
-    def reconfig(self,config):
-        print('MQTT::recondfig')
+    def restart(self,config):
+        print('MQTT::restart')
         time.sleep(1)
         self.unsubscribe()
         self.disconnect()
+        self.setup(config)
         time.sleep(1)
         self.reinitialise()
         time.sleep(1)
-        self.setup(config)
+        self.start()
 
         return True
 
-    def setup(self,config):
-        print ('MQTT::Setup libmqttbroker:',self._config)
+    def start(self):
+        print('MQTT::start')
+        '''
+        start broker
+        '''
+        self._mqttc=self.create()
+        self.callback()
+        self.connect(self._host,self._port)
+        for item in self._subscribe:
+            self.subscribe(item)
 
+        return True
+
+    def callback(self):
         '''
         setup callbacks
         '''
@@ -66,31 +78,46 @@ class mqttbroker(msgbus):
         self._mqttc.on_subscribe = self.on_subscribe
         self._mqttc.on_disconnect = self.on_disconnect
         self._mqttc.on_log = self.on_log
+        return True
+
+    def setup(self,config):
+        print ('MQTT::Setup libmqttbroker:',self._config)
+
+        '''
+        setup callbacks
+        '''
+     #   self._mqttc.on_message = self.on_message
+      #  self._mqttc.on_connect = self.on_connect
+      #  self._mqttc.on_publish = self.on_publish
+      #  self._mqttc.on_subscribe = self.on_subscribe
+      #  self._mqttc.on_disconnect = self.on_disconnect
+      #  self._mqttc.on_log = self.on_log
 
         '''
         broker Configuration
         '''
 
-        self.msgbus_publish('LOG','%s start broker with configuration %s '%('INFO', config))
+       # self.msgbus_publish('LOG','%s start broker with configuration %s '%('INFO', config))
 
         self._host = str(config.get('HOST','localhost'))
         self._port = int(config.get('PORT',1883))
         #temp = str(config.get('SUBSCRIBE','/SUBSCRIBE'))
         #self._subscribe = temp.split(",")
 
-        self._subscribe = str(config.get('SUBSCRIBE','/SUBSCRIBE'))
+        self._subscribe = config.get('SUBSCRIBE',None)
 
         self._publish = str(config.get('PUBLISH','/PUBLISH'))
 
         '''
         start broker
         '''
-        self.connect()
-        self.subscribe()
+    #    self.connect(self._host,self._port)
+     #   for item in self._subscribe:
+      #      self.subscribe(item)
         return True
 
     def run(self):
-        self._mqttc.loop()
+        self._mqttc.loop_start()
 
     def tx_data(self,message):
         self.publish(message)
@@ -129,14 +156,14 @@ class mqttbroker(msgbus):
         return True
 
     def on_message(self, client, userdata, msg):
-        print('Mqtt received: ',msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
+    #    print('Mqtt received: ',msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
         message ={}
-
-        list_topic = msg.topic.split("/")
-        message.update({'CHANNEL':list_topic[-2]})
-        message.update({'PORT_NAME':list_topic[-1]})
+       # print('RECEIVE',msg.topic, msg.payload)
+        #list_topic = msg.topic.split("/")
+        message.update({'CHANNEL':msg.topic})
         message.update({'MESSAGE':msg.payload})
-        self.msgbus_publish('LOG','%s Broker: received Date Device: %s , Port: %s , Message: %s'%('INFO',message['CHANNEL'], message['PORT_NAME'], message['MESSAGE']))
+        print('Receive',message)
+      #  self.msgbus_publish('LOG','%s Broker: received Date Device: %s , Port: %s , Message: %s'%('INFO',message['CHANNEL'], message['PORT_NAME'], message['MESSAGE']))
         self._rxQueue.put(message)
         return True
 
@@ -145,7 +172,7 @@ class mqttbroker(msgbus):
         return True
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
-        print('MQTT: Subscribed: '+str(userdata)+' '+str(granted_qos))
+        print('MQTT: on_subscribe: '+str(userdata)+' '+str(granted_qos))
         return True
 
     def on_unsubscribe(self, client, userdata, mid):
@@ -161,13 +188,13 @@ class mqttbroker(msgbus):
         :param buf:
         :return:
         '''
-      #  print('MQTT: Log',client, userdata, level, buf)
+        print('MQTT: Log',client, userdata, level, buf)
         return True
 
     def create(self):
         print('mqtt create mqtt object')
-        self._mqttc = mqtt.Client(str(os.getpid()))
-        return True
+        return mqtt.Client(str(os.getpid()))
+   #     return True
 
     def reinitialise(self):
         print('mqtt reinitialise')
@@ -175,11 +202,11 @@ class mqttbroker(msgbus):
 
         return True
 
-    def connect(self):
-        print ('mqtt connected')
+    def connect(self,host,port):
+      #  print ('mqtt connected')
         #self._mqttc.connect('localhost')
 
-        self._mqttc.connect(self._host, self._port,60)
+        self._mqttc.connect(host, port,60)
         self._mqttc.loop_start()
         return True
 
@@ -188,8 +215,11 @@ class mqttbroker(msgbus):
         self._mqttc.disconnect()
         return True
 
-    def subscribe(self):
-        self._mqttc.subscribe(self._subscribe,0)
+    def subscribe(self,channel = None):
+      #  if not channel:
+       #for item in self._subscribe:
+        #    print('Subscribe',item)
+        self._mqttc.subscribe(channel,0)
         return True
 
     def unsubscribe(self):
@@ -197,31 +227,31 @@ class mqttbroker(msgbus):
         return True
 
     def publish(self,message):
-        print('Publish:',message)
-     #   self._mqttc.publish(message)
-        self._mqttc.publish(self._publish, message, 0)
-        return True
 
+      #        message.update({'CHANNEL':msg.topic})
+       # message.update({'MESSAGE':msg.payload})
+       # print('Receive',message)
+        #print('Publish:',message)
+     #   self._mqttc.publish(message)
+        self._mqttc.publish(message.get('CHANNEL'), message.get('MESSAGE'), 0)
+        return True
 
 if __name__ == "__main__":
 
-    config = {'HOST':'localhost','PUBLISH':'/TEST','SUBSCRIBE':'/TEST'}
-    broker = mqttbroker(config)
-    time.sleep(2)
-    broker.tx_data('hhdhdhdhdhd')
-    time.sleep(1)
-    counter = 5
-    loopcounter = 0
-    loop = True
-    while loop:
-        data = broker.rx_data()
-        print ('Loop:', loopcounter, 'DATA:',data)
+    config1 = {'HOST':'192.168.1.107','PUBLISH':'/TEST','SUBSCRIBE':['/TEST/#','/TEST2']}
+    config2 = {'HOST':'192.168.1.107','PUBLISH':'/TEST','SUBSCRIBE':['/TEST1/#','/TEST3','/TEST4']}
+    msg = {'CHANNEL':'/TTT','MESSAGE':'{ioioookko}'}
+    broker = mqttbroker(config1)
+  #  broker = setup(config)
+    broker.start()
 
-        time.sleep(0.5)
-        if counter > loopcounter:
-            print ('TRUE')
-            loop = True
-            loopcounter = loopcounter + 1
-        else:
-            loop = False
-            print ('FALSE')
+#    broker.connect()
+ #   broker.subscribe()
+    time.sleep(10)
+    broker.restart(config2)
+    time.sleep(10)
+
+    while True:
+        time.sleep(10)
+        broker.publish(msg)
+   # time.sleep(2)

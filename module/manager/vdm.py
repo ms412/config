@@ -16,7 +16,7 @@ import port manager
 from module.manager.vpm.binin import binin
 from module.manager.vpm.binout import binout
 from module.manager.vpm.trigger import trigger
-#from module.manager.vpm.pulse import pulse
+from module.manager.vpm.pulse import pulse
 #from module.manager.vpm.pwm import pwm
 #from module.manager.vpm.timerin import timerin
 
@@ -308,6 +308,10 @@ class vdm(Thread,msgbus):
                 result = True
 
             elif 'TRIGGER' in self._PIN_MODE:
+                self._VPMobj[portID]=trigger(portID,self._hwHandle,self._on_notify)
+                result = True
+
+            elif 'PULSE' in self._PIN_MODE:
                 self._VPMobj[portID]=trigger(portID,self._hwHandle,self._on_notify)
                 result = True
 

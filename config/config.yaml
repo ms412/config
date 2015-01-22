@@ -2,9 +2,9 @@
 GENERAL:
  #Allowed LOGMODEs
  # INFO, WARNING, ERROR, CRITICAL, DEBUG
- LOGMODE: INFO
- LOGFILE: ./gpio2mqtt.log
- #LOGFILE: /var/log/gpio2mqtt.log
+ LOGMODE: WARNING
+ #LOGFILE: ./gpio2mqtt.log
+ LOGFILE: /var/log/gpio2mqtt.log
  UPDATE: 0.01
 
 BROKER:
@@ -13,17 +13,16 @@ BROKER:
  #MQTT Channels
  SUBSCRIBE: /GPIO_1/#
  PUBLISH: /OPENHAB
+ CONFIG: /GPIO_1/CONFIG
 
 #DEVICES is a fixed value
 DEVICES:
-
-
 
  MCP23017_2:
   SYSTEM: RASPBERRY_B1
   I2C_ADDRESS: 0x26
   TYPE: MCP23017
-  UPDATE: 5
+  UPDATE: 1
   #NAME: DEVICE02
 
   Port1:

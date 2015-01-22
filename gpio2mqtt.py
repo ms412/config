@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 3:
         configfile = sys.argv[2]
     else:
-        configfile = './config/config.yaml'
+        configfile = '/etc/gpio2mqtt/gpio2mqtt.yaml'
 
     print('Configfile',configfile)
     mgr_handle = manager(configfile)

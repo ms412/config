@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Thread
 
 from library.libmsgbus import msgbus
-from library.libtree_old import tree
+from library.libtree import tree
 from library.libmqttbroker import mqttbroker
 
 class msgbroker(Thread,msgbus):
@@ -93,6 +93,30 @@ class msgbroker(Thread,msgbus):
        # self.msgbus_publish('MSG_TX',self._dict2json(msg))
         return True
 
+    def on_data_new(self,msg):
+        msg = self._json2dict(msg)
+
+        header = msg.pop('MESSAGE',None)
+        if not header:
+            if header:
+                msg_type = header.get('TYPE',None)
+
+                if msg_type == 'CONFIG':
+                    msg_mode = header.get('MODE',None)
+                    if msg_mode == 'ADD':
+                        self.msgbus_publish('CFG_ADD',msg)
+                    elif msg_mode == 'DEL':
+                        self.msgbus_publish('CFG_DEL',msg)
+                    else:
+                        self.msgbus_publish('CFG_NEW',msg)
+
+                elif msg_type == 'REQUEST':
+                    self.msgbus_publish('REQUEST',msg)
+                else:
+                    print('Not found',msg)
+        else:
+            self.msgbus_publish('REQUEST',msg)
+
     def on_data(self,msg):
         '''
         :param msg:
@@ -159,8 +183,7 @@ class msgbroker(Thread,msgbus):
 
 
 
-if __name__ == "__main__":
-
+,
     bus = msgbus()
 
     broker =msgbroker()

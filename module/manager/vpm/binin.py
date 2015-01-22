@@ -150,18 +150,28 @@ class binin(msgbus):
         STATE = whether value is true or false
         '''
 
-        notify_msg= {}
+        container = {}
+        msg_container = {}
 
-        notify_msg['PORT_ID'] = self._VPM_ID
-        notify_msg['VALUE'] = self._pin_save
+        msg_container['VALUE'] = self._pin_save
         if msg:
-            notify_msg['MSG'] = msg
-        notify_msg['STATE'] = True
+            msg_container['MSG'] = msg
+        msg_container['STATE'] = True
+
+        container[self._VPM_ID]=msg_container
+
+    #    notify_msg= {}
+
+     #   notify_msg['PORT_ID'] = self._VPM_ID
+      #  notify_msg['VALUE'] = self._pin_save
+      #  if msg:
+       #     notify_msg['MSG'] = msg
+       # notify_msg['STATE'] = True
       #  print ('Sent Notification:,',notify_msg)
         logmsg = 'Notification send to VDM'
-        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, notify_msg))
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, container))
 
-        self._callback(notify_msg)
+        self._callback(container)
 
         return True
 

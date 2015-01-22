@@ -72,13 +72,16 @@ class mqttclient(object):
         self._mqttc.publish(self._pub_channel, message, 0)
 
     def loop(self):
-        return self._mqttc.loop()
+        return self._mqttc.loop_start()
 
 
 if __name__ == '__main__':
     #ADD MQTT Broker
    # MSG = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'BROKER':{'HOSTS':'localhost','PORTE':1883}}
     msg_get1 = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port1':{'TYPE':'GET','COMMAND':'GET'}}}}
+
+    msg_set11 = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port9':{'TYPE':'SET','COMMAND':'ON'}}}}
+    msg_set12 = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port9':{'TYPE':'SET','COMMAND':'OFF'}}}}
 
     msg_add_binout1 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'DEVICES':{'MCP23017_2':{'Port12':{'HWID':12,'MODE':'BINARY-OUT','OFF_VALUE':'AAA','ON_VALUE':'BBB','INITIAL':'AAA'}}}}
     msg_set1 = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'MCP23017_2':{'Port12':{'TYPE':'SET','COMMAND':'BBB'}}}}
@@ -101,23 +104,28 @@ if __name__ == '__main__':
     broker.setpubchannel('/GPIO_1')
     broker.setsubchannel('/RECEIVER')
     broker.connect()
+    broker.loop()
     broker.subscribe()
 
   #  input('Press Enter for add command..')
     #broker.publish(json.dumps(msg_add))
 
    # input('Press Enter for delete command..')
-    broker.publish(json.dumps(msg_add_binout1))
-    time.sleep(10)
-    broker.publish(json.dumps(msg_set1))
-    time.sleep(20)
-    broker.publish(json.dumps(msg_set2))
-    time.sleep(10)
-    broker.publish(json.dumps(msg_set1))
-    time.sleep(20)
-    broker.publish(json.dumps(msg_add_binout1))
+ #   broker.publish(json.dumps(msg_add_binout1))
+ #   time.sleep(10)
+ #   broker.publish(json.dumps(msg_set1))
+  #  time.sleep(20)
+   # broker.publish(json.dumps(msg_set2))
+ #   time.sleep(10)
+  #  broker.publish(json.dumps(msg_set1))
+   # time.sleep(20)
+    #broker.publish(json.dumps(msg_add_binout1))
 
     rc= 0
     while rc == 0:
-        rc = broker.loop()
+       # rc = broker.loop_start()
+        broker.publish(json.dumps(msg_set11))
+        time.sleep(2)
+        broker.publish(json.dumps(msg_set12))
+        time.sleep(2)
     print("rc:", str(rc))
