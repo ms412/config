@@ -57,7 +57,7 @@ class openhabAdapter(Thread,msgbus):
                 while True:
                     msg = self._mqttbroker.rx_data()
                     if msg:
-                        self.on_data(msg)
+                        self.on_request(msg)
                     else:
                         break
 
@@ -110,7 +110,26 @@ class openhabAdapter(Thread,msgbus):
        # self.msgbus_publish('MSG_TX',self._dict2json(msg))
         return True
 
-    def on_data(self,msg):
+    def on_request(self,msg):
+
+        path = msg.get('CHANNEL',None)
+        payload = msg.get('MESSAGE',None)
+        payload = self._json2dict(payload)
+
+        if path in self._mqtt_config_path:
+            print ('PRODUCER sends GPIO2MQTT message format')
+            print ('no conversion required',payload)
+            self.on_message(payload)
+
+        else:
+            print ('PRODUCER is OPENHAB')
+            print('convert messag to gpio2mqtt format',payload)
+
+            self.on_message(self.openhab2gpio(path,payload))
+
+        return True
+
+    def on_message(self,msg):
         '''
         :param msg:
         :return:
@@ -123,17 +142,21 @@ class openhabAdapter(Thread,msgbus):
 
         '''
    #     print('ON_DATA:', msg)
-        path = msg.get('CHANNEL',None)
-        payload = msg.get('MESSAGE',None)
-
-        print('Payload',payload,'path',path)
+     #   path = msg.get('CHANNEL',None)
+      #  payload = msg.get('MESSAGE',None)
+       # data = dict(json.loads(payload).items())
+       # print('Payload1',payload, type(payload),payload.decode("utf-8"))
 
        # payload = self._json2dict(payload)
 
-        if self._mqtt_config_path in path:
-            print ('CONFIG MESSAGe')
 
-        msg_header = payload.get('MESSAGE',None)
+      #  print('Dict', payload, path)
+      #  print('TEST',payload.get('TEST'))
+
+       # if path in self._mqtt_config_path:
+        #    print ('PRODUCER sends GPIO2MQTT message format')
+
+        msg_header = msg.get('MESSAGE',None)
         del msg['MESSAGE']
 
         if msg_header:
@@ -142,18 +165,28 @@ class openhabAdapter(Thread,msgbus):
             if msg_type == 'CONFIG':
                 msg_mode = msg_header.get('MODE',None)
                 if msg_mode == 'ADD':
+                    print('ADD message')
                     self.msgbus_publish('CFG_ADD',msg)
                 elif msg_mode == 'DEL':
+                    print('DEL message')
                     self.msgbus_publish('CFG_DEL',msg)
                 else:
                     self.msgbus_publish('CFG_NEW',msg)
 
             elif msg_type == 'REQUEST':
+                print('Request message')
                 self.msgbus_publish('REQUEST',msg)
 
-            else:
-                print('Not found',msg)
+        else:
+            print('Not found',msg)
+        #else:
+         #   print('PRODUCER sends OPENHAB messages')
 
+           # msg_new = {}
+           # msg_new['MESSAGE']=payload
+           # msg_new['CHANNEL']= path
+
+        #    print('TEST',self.openhab2gpio(path,payload))
 
         return True
 
@@ -170,13 +203,15 @@ class openhabAdapter(Thread,msgbus):
         print('Message Plain',mqtt_msg)
         return mqtt_msg
 
-    def openhab2gpio(self,msg):
+    def openhab2gpio(self,mqttpath,mqttpayload):
 
-        mqttpath = msg.get('PATH')
-        mqttpayload = msg.get('MESSAGE')
+      #  mqttpath = msg.get('PATH')
+      #  mqttpayload = msg.get('MESSAGE')
 
         print('PATH:',mqttpath)
         print('MESSAGE',mqttpayload)
+       # mqttpath = self._json2dict(mqttpath)
+        #mqttpayload = self._json2dict(mqttpayload)
 
         if mqttpath not in self._mqtt_config_path:
 
@@ -206,7 +241,7 @@ class openhabAdapter(Thread,msgbus):
 
         print('Message',msg)
 
-        return True
+        return msg
 
     def gpio2openhab(self,msg):
 
@@ -274,6 +309,7 @@ class openhabAdapter(Thread,msgbus):
         return json.loads(j_data.decode('utf8'))
 
 
+
 if __name__ == "__main__":
 
 
@@ -282,7 +318,7 @@ if __name__ == "__main__":
         broker = {}
         test = {}
 
-        broker['HOST']='192.168.1.107'
+        broker['HOST']='localhost'
         broker['PORT']=1883
         broker['PUBLISH']='/OPENHAB'
         broker['SUBSCRIBE']='/XXX/'

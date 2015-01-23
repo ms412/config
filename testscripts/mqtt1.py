@@ -1,4 +1,6 @@
 import os
+import json
+import time
 import paho.mqtt.client as mqtt
 
 # Define event callbacks
@@ -36,13 +38,34 @@ mqttc.on_subscribe = on_subscribe
 mqttc.connect('localhost', 1883)
 
 # Start subscribe, with QoS level 0
-mqttc.subscribe("hello/world", 0)
+#mqttc.subscribe("hello/world", 0)
+def _dict2json(self,dict):
+    # return str(dict)
+    return json.dumps(dict)
 
+header_add = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'DEVICES':{'DEV1':{'PORT1':{'123':45,'PI':'878'}}}}
+header_del = {'MESSAGE':{'TYPE':'CONFIG','MODE':'DEL'},'DEVICES':{'DEV1':{'PORT1':{'123':45,'PI':'878'}}}}
+header_new = {'MESSAGE':{'TYPE':'CONFIG','MODE':'NEW'},'DEVICES':{'DEV1':{'PORT1':{'123':45,'PI':'878'}}}}
+header_req = {'MESSAGE':{'TYPE':'REQUEST'},'DEVICES':{'DEV1':{'PORT1':{'123':45,'PI':'878'}}}}
+openhab_set = {'SET':'123','MODE':'632'}
+openhab_req = {'123':45,'PI':'878'}
+dict = {}
+dict['TEST']='HELP'
+dict['MESSAGE']='1234'
 # Publish a message
-mqttc.publish("hello/world", "my message")
+print('Dict',dict,json.dumps(dict))
+mqttc.publish("/TEST/CONFIG", json.dumps(header_add),0)
+time.sleep(3)
+mqttc.publish("/TEST/CONFIG", json.dumps(header_del),0)
+time.sleep(3)
+mqttc.publish("/TEST/CONFIG", json.dumps(header_new),0)
+time.sleep(3)
+mqttc.publish("/TEST/CONFIG", json.dumps(header_req),0)
+time.sleep(3)
+mqttc.publish("/XXX/DEVICEn/PORTn", json.dumps(openhab_set),0)
 
 # Continue the network loop, exit when an error occurs
-rc = 0
-while rc == 0:
-    rc = mqttc.loop()
-print("rc: " + str(rc))
+#rc = 0
+#while rc == 0:
+#    rc = mqttc.loop()
+#print("rc: " + str(rc))
