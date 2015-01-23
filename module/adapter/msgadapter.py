@@ -8,7 +8,7 @@ from library.libtree import tree
 #from library.libmqttbroker import mqttbroker
 from library.libmqtt import mqttbroker
 
-class openhabAdapter(Thread,msgbus):
+class msgadapter(Thread,msgbus):
 
     def __init__(self):
         Thread.__init__(self)

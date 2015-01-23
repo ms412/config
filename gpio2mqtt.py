@@ -27,7 +27,7 @@ import time
 from library.libmsgbus import msgbus
 from module.adapter.config import configmodule
 from module.adapter.logging import log_adapter
-from module.adapter.messagebroker import msgbroker
+from module.adapter.msgadapter import msgadapter
 from module.manager.vhm import vhm
 
 
@@ -61,7 +61,7 @@ class manager(msgbus):
     def start_msgbroker(self):
         print('Start Message Broker')
        # self.msgbus_publish('LOG','%s Start MQTT broker'%('INFO'))
-        self._msgbroker = msgbroker()
+        self._msgbroker = msgadpter()
         self._msgbroker.start()
         self.msgbus_publish('LOG','%s Start Message broker')
 
