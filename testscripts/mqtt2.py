@@ -47,6 +47,6 @@ rc = 0
 while rc == 0:
     time.sleep(2)
     print('#############Publish######################################')
-    mqttc.publish('/TEST','JJJJJJ')
+    mqttc.publish('/GPIO1/TRT','JJJJJJ')
     rc = mqttc.loop()
 print("rc: " + str(rc))

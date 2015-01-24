@@ -132,7 +132,7 @@ class vdm(Thread,msgbus):
 
         while threadRun:
             time.sleep(self._UPDATE)
-            print('VDM loop Device ',self._DevName, len(self._VPMobj), self._UPDATE)
+           # print('VDM loop Device ',self._DevName, len(self._VPMobj), self._UPDATE)
 
             while not self.cfgQ.empty():
                 self.on_config(self.cfgQ.get())

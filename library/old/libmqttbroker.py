@@ -1,8 +1,8 @@
 
 import time
 import os
-import library.libpaho as mqtt
-#import paho.mqtt.client as mqtt
+#import library.libpaho as mqtt
+import paho.mqtt.client as mqtt
 
 from queue import Queue
 from library.libmsgbus import msgbus
@@ -205,9 +205,10 @@ class mqttbroker(msgbus):
 
 if __name__ == "__main__":
 
-    config = {'HOST':'localhost','PUBLISH':'/TEST','SUBSCRIBE':'/TEST'}
+    config = {'HOST':'192.168.1.107','PUBLISH':'/TEST','SUBSCRIBE':'/TEST'}
     broker = mqttbroker(config)
     time.sleep(2)
+    broker.reconfig(config)
     broker.tx_data('hhdhdhdhdhd')
     time.sleep(1)
     counter = 5

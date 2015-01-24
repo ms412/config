@@ -61,60 +61,27 @@ class manager(msgbus):
     def start_msgbroker(self):
         print('Start Message Broker')
        # self.msgbus_publish('LOG','%s Start MQTT broker'%('INFO'))
-        self._msgbroker = msgadpter()
+        self._msgbroker = msgadapter()
         self._msgbroker.start()
         self.msgbus_publish('LOG','%s Start Message broker')
-
-   # def start_mqttbroker(self):
-    #    print('Start Broker')
-     #   self._mqttbroker = mqttbroker()
-      #  self._mqttbroker.start()
-
-
-    #    self._broker_thread = mqtt_adapter()
-   #     self._broker_thread.start()
-
-    #def start_msgbroker(self):
-     #   print('Start Message Broker')
-      #  self._msgbroker = msgbroker()
-
+        return True
 
     def start_devices(self):
         print('Start Devices')
         self.msgbus_publish('LOG','%s Start VHM Virtual Hardware Manager')
         self._vhm_thread = vhm()
-       # self._vhm_thread.start()
+        return True
 
     def run(self):
         """
         Entry point, initiates components and loops forever...
         """
-
         self.start_config()
         self.start_logging()
-       # self.start_mqttbroker()
         self.start_msgbroker()
-      #  self.start_msgbroker()
         self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
-       # self.start_borker()
 
-        #self._msgbroker.run()
         self.start_devices()
-       # time.sleep(5)$
-        time.sleep(2)
-
-        self._cfg_thread.publish()
-
-        #while True:
-         #   self._msgbroker.run()
-          #  time.sleep(2)
-
-
-      #  self.start_borker()
-
-
-
-
 
 
 

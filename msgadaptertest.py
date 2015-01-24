@@ -54,11 +54,9 @@ class msgadapter(Thread,msgbus):
                 self.on_notify(self._notifyQ.get())
 
             if self._mqttbroker:
-              #  print('mqttbroker true',self._mqttbroker)
                 while True:
                     msg = self._mqttbroker.rx_data()
                     if msg:
-                        print('MEssage available',msg)
                         self.on_request(msg)
                     else:
                         break
