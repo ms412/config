@@ -38,11 +38,16 @@ mqttc.on_subscribe = on_subscribe
 #mqttc.username_pw_set(url.username, url.password)
 mqttc.connect('192.168.1.107', 1883)
 
-# Start subscribe, with QoS level 0
-#mqttc.subscribe("hello/world", 0)
-def _dict2json(self,dict):
-    # return str(dict)
-    return json.dumps(dict)
+
+def binout_toggel():
+    on = {'TYPE':'SET','COMMAND':'ON'}
+    off = {'TYPE':'SET','COMMAND':'OFF'}
+    mqttc.publish("/GPIO1/MCP23017_2/Port9", json.dumps(on),0)
+    time.sleep(5)
+    mqttc.publish("/GPIO1/MCP23017_2/Port9", json.dumps(off),0)
+    return True
+
+
 
 header_add = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'DEVICES':{'DEV1':{'PORT1':{'123':45,'PI':'878'}}}}
 header_del = {'MESSAGE':{'TYPE':'CONFIG','MODE':'DEL'},'DEVICES':{'DEV1':{'PORT1':{'123':45,'PI':'878'}}}}
@@ -61,7 +66,8 @@ print('Dict',dict,json.dumps(dict))
 #time.sleep(3)
 #mqttc.publish("/GPIO1/CONFIG/ii", json.dumps(openhab_on),0)
 time.sleep(3)
-mqttc.publish("/GPIO1/MCP23017_2/Port9", json.dumps(openhab_off),0)
+binout_toggle()
+#mqttc.publish("/GPIO1/MCP23017_2/Port9", json.dumps(openhab_on),0)
 #time.sleep(3)
 #mqttc.publish("/TEST/CONFIG", json.dumps(header_req),0)
 #time.sleep(3)

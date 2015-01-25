@@ -156,14 +156,14 @@ class mqttbroker(msgbus):
         return True
 
     def on_message(self, client, userdata, msg):
-      #  message ={}
-       # message.update({'CHANNEL':msg.topic})
-       # message.update({'MESSAGE':msg.payload})
+        message ={}
+        message.update({'CHANNEL':msg.topic})
+        message.update({'MESSAGE':msg.payload})
        # print('MQTT:: on_message:',userdata,msg,message)
-        msg = 'Message received'
-        self.msgbus_publish('LOG','%s Libmqtt: %s Channel: %s Message: %s'%('INFO',msg, msg.topic, msg.payload))
+        log_msg = 'Message received'
+        self.msgbus_publish('LOG','%s Libmqtt: %s Channel: %s Message: %s'%('INFO',log_msg, msg.topic, msg.payload))
       #  self.msgbus_publish('LOG','%s Broker: received Date Device: %s , Port: %s , Message: %s'%('INFO',message['CHANNEL'], message['PORT_NAME'], message['MESSAGE']))
-        self._rxQueue.put(msg)
+        self._rxQueue.put(message)
         return True
 
     def on_publish(self, client, userdata, mid):

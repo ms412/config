@@ -26,7 +26,14 @@ class msgadapter(Thread,msgbus):
 
         self._mqttbroker = None
 
+        msg = 'Create Object'
+        self.msgbus_publish('LOG','%s msgadapter: %s '%('DEBUG',msg))
+
         print('start openhab Adapter')
+
+    def __del__(self):
+        msg = 'Delete Object'
+        self.msgbus_publish('LOG','%s msgadapter: %s '%('DEBUG',msg))
 
 
     def setup(self):
@@ -68,17 +75,20 @@ class msgadapter(Thread,msgbus):
         return True
 
     def _on_notify(self,msg):
-        print('Receive notification',msg)
+     #   print('Receive notification',msg)
         self._notifyQ.put(msg)
         return True
 
     def _on_config(self,msg):
-        print('Received config',msg)
+    #    print('Received config',msg)
         self._configQ.put(msg)
 
         return True
 
     def on_config(self,cfg_msg):
+        msg = 'Config Object'
+        self.msgbus_publish('LOG','%s msgadapter: %s Message: %s'%('INFO',msg,cfg_msg))
+
         broker = cfg_msg.select('BROKER')
         self._consumer = broker.getNode('CONSUMER','OPENHAB')
         self._mqtt_config_path = broker.getNode('CONFIG','/GPIO1/CONFIG')
@@ -102,10 +112,14 @@ class msgadapter(Thread,msgbus):
     def on_notify(self,msg):
 
         if 'OPENHAB' in self._consumer:
-            print('Publish OPENAB', self._consumer)
+            msg_log = 'Notification Publish for Openhab'
+            self.msgbus_publish('LOG','%s msgadapter: %s '%('INFO',msg_log))
+           # print('Publish OPENAB', self._consumer)
             self._mqttbroker.tx_data(self.gpio2openhab(msg))
         else:
-            print('Publish PLAIN')
+            msg_log = 'Notification Publish Plaint'
+            self.msgbus_publish('LOG','%s msgadapter: %s '%('INFO',msg_log))
+        #    print('Publish PLAIN')
             msg['MESSAGE'] = self._generate_header('NOTIFY')
             self._mqttbroker.tx_data(self.gpio2plain(msg))
      #   print('messagebroker::msg broker',msg)
@@ -120,13 +134,17 @@ class msgadapter(Thread,msgbus):
         payload = self._json2dict(payload)
 
         if path in self._mqtt_config_path:
-            print ('PRODUCER sends GPIO2MQTT message format')
-            print ('no conversion required',payload)
+            msg_log = 'Request Publish for Openhab'
+            self.msgbus_publish('LOG','%s msgadapter: %s '%('INFO',msg_log))
+        #    print ('PRODUCER sends GPIO2MQTT message format')
+         #   print ('no conversion required',payload)
             self.on_message(payload)
 
         else:
-            print ('PRODUCER is OPENHAB')
-            print('convert messag to gpio2mqtt format',payload)
+            msg_log = 'Request Publish in plain mode'
+            self.msgbus_publish('LOG','%s msgadapter: %s '%('INFO',msg_log))
+        #    print ('PRODUCER is OPENHAB')
+         #   print('convert messag to gpio2mqtt format',payload)
 
             self.on_message(self.openhab2gpio(path,payload))
 
@@ -144,20 +162,6 @@ class msgadapter(Thread,msgbus):
           -+MODE = NONE
 
         '''
-   #     print('ON_DATA:', msg)
-     #   path = msg.get('CHANNEL',None)
-      #  payload = msg.get('MESSAGE',None)
-       # data = dict(json.loads(payload).items())
-       # print('Payload1',payload, type(payload),payload.decode("utf-8"))
-
-       # payload = self._json2dict(payload)
-
-
-      #  print('Dict', payload, path)
-      #  print('TEST',payload.get('TEST'))
-
-       # if path in self._mqtt_config_path:
-        #    print ('PRODUCER sends GPIO2MQTT message format')
 
         msg_header = msg.get('MESSAGE',None)
         del msg['MESSAGE']
@@ -168,28 +172,29 @@ class msgadapter(Thread,msgbus):
             if msg_type == 'CONFIG':
                 msg_mode = msg_header.get('MODE',None)
                 if msg_mode == 'ADD':
-                    print('ADD message')
+                    msg_log = 'Message: Config, Type: Add'
+                    self.msgbus_publish('LOG','%s msgadapter: %s '%('INFO',msg_log))
+               #     print('ADD message')
                     self.msgbus_publish('CFG_ADD',msg)
                 elif msg_mode == 'DEL':
-                    print('DEL message')
+                    msg_log = 'Message: Config, Type: Del'
+                    self.msgbus_publish('LOG','%s msgadapter: %s '%('INFO',msg_log))
+                 #   print('DEL message')
                     self.msgbus_publish('CFG_DEL',msg)
                 else:
                     self.msgbus_publish('CFG_NEW',msg)
+                    msg_log = 'Message: Config, Type: New'
+                    self.msgbus_publish('LOG','%s msgadapter: %s '%('INFO',msg_log))
 
             elif msg_type == 'REQUEST':
-                print('Request message')
+                msg_log = 'Message: Request'
+                self.msgbus_publish('LOG','%s msgadapter: %s '%('INFO',msg_log))
+       #         print('Request message')
                 self.msgbus_publish('REQUEST',msg)
 
         else:
-            print('Not found',msg)
-        #else:
-         #   print('PRODUCER sends OPENHAB messages')
-
-           # msg_new = {}
-           # msg_new['MESSAGE']=payload
-           # msg_new['CHANNEL']= path
-
-        #    print('TEST',self.openhab2gpio(path,payload))
+            msg_log = 'Message: UNKNOWN'
+            self.msgbus_publish('LOG','%s msgadapter: %s Message: %s'%('ERROR',msg_log))
 
         return True
 

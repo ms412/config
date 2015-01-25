@@ -14,8 +14,8 @@ class mqttclient(object):
 
         self._host = '192.168.1.107'
         self._port = 1883
-        self._sub_channel = '/subscribe'
-        self._pub_channel = '/publish'
+        self._sub_channel = '/OPENHAB'
+        self._pub_channel = '/GPIO1'
 
         self._mqttc = mqtt.Client(str(os.getpid()))
 
@@ -26,8 +26,9 @@ class mqttclient(object):
         self._mqttc.on_connect = self.mqtt_on_connect
         self._mqttc.on_publish = self.mqtt_on_publish
         self._mqttc.on_subscribe = self.mqtt_on_subscribe
-        #self._mqttc.on_disconnect = self.mqtt_on_disconnect
-        print('INIT')
+
+        self.connect()
+        self.subscribe()
 
     def mqtt_on_connect(self,mosq,obj,flags,rc):
         print('MQTT: connect to host:', self._host,str(rc))
@@ -38,41 +39,47 @@ class mqttclient(object):
         return True
 
     def mqtt_on_publish(self,mosq,obj,mid):
-        print ('MQTT: publish message th channel', self._pub_channel,str(mid))
+        print ('MQTT: publish message the channel', self._pub_channel,str(mid))
         return True
 
     def mqtt_on_message(self,mqtt,obj,msg):
         print('MQTT: message received:',msg.topic,msg.payload)
         return True
 
-    def sethost(self,host):
-        self._host = host
-        return True
-
-    def setport(self,port):
-        self._port = port
-        return True
-
-    def setsubchannel(self,sub_channel):
-        self._sub_channel = sub_channel
-        return True
-
-    def setpubchannel(self,pub_channel):
-        self._pub_channel = pub_channel
-        return True
-
     def connect(self):
         print ('Connect')
         self._mqttc.connect(self._host, self._port)
+        self._mqttc.loop_start()
 
     def subscribe(self):
         self._mqttc.subscribe(self._sub_channel,0)
 
-    def publish(self,message):
-        self._mqttc.publish(self._pub_channel, message, 0)
+    def publish(self,channel, message):
+        self._mqttc.publish(channel, message, 0)
 
-    def loop(self):
-        return self._mqttc.loop_start()
+
+def binout_toggle():
+    on = {'TYPE':'SET','COMMAND':'ON'}
+    off = {'TYPE':'SET','COMMAND':'OFF'}
+    broker.publish("/GPIO1/MCP23017_2/Port9", json.dumps(on))
+    time.sleep(5)
+    broker.publish("/GPIO1/MCP23017_2/Port9", json.dumps(off))
+    time.sleep(5)
+    return True
+
+def binout_add():
+    msg_add_binout = {'MESSAGE':{'TYPE':'CONFIG','MODE':'ADD'},'DEVICES':{'MCP23017_2':{'Port12':{'HWID':12,'MODE':'BINARY-OUT','OFF_VALUE':'AAA','ON_VALUE':'BBB','INITIAL':'AAA'}}}}
+    broker.publish("/GPIO1/CONFIG", json.dumps(msg_add_binout))
+    time.sleep(5)
+    msg_set1 = {'TYPE':'SET','COMMAND':'BBB'}
+    broker.publish("/GPIO1/MCP23017_2/Port12", json.dumps(msg_set1))
+    time.sleep(5)
+    msg_set2 = {'TYPE':'SET','COMMAND':'AAA'}
+    broker.publish("/GPIO1/MCP23017_2/Port12", json.dumps(msg_set2))
+    time.sleep(5)
+    msg_del_binout2 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'DEL'},'DEVICES':{'MCP23017_2':{'Port12':''}}}
+    broker.publish("/GPIO1/CONFIG", json.dumps(msg_del_binout2))
+    time.sleep(5)
 
 
 if __name__ == '__main__':
@@ -101,31 +108,10 @@ if __name__ == '__main__':
   # msgStr = json.dumps(MSG)
 
     broker = mqttclient()
-    broker.setpubchannel('/GPIO_1')
-    broker.setsubchannel('/RECEIVER')
-    broker.connect()
-    broker.loop()
-    broker.subscribe()
+    time.sleep(3)
+    binout_toggle()
+    binout_add()
 
-  #  input('Press Enter for add command..')
-    #broker.publish(json.dumps(msg_add))
 
-   # input('Press Enter for delete command..')
- #   broker.publish(json.dumps(msg_add_binout1))
- #   time.sleep(10)
- #   broker.publish(json.dumps(msg_set1))
-  #  time.sleep(20)
-   # broker.publish(json.dumps(msg_set2))
- #   time.sleep(10)
-  #  broker.publish(json.dumps(msg_set1))
-   # time.sleep(20)
-    #broker.publish(json.dumps(msg_add_binout1))
 
-    rc= 0
-    while rc == 0:
-       # rc = broker.loop_start()
-        broker.publish(json.dumps(msg_set11))
-        time.sleep(2)
-        broker.publish(json.dumps(msg_set12))
-        time.sleep(2)
-    print("rc:", str(rc))
+
