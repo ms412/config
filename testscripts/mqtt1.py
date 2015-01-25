@@ -58,8 +58,8 @@ dict['MESSAGE']='1234'
 # Publish a message
 print('Dict',dict,json.dumps(dict))
 #mqttc.publish("/GPIO1/CONFIG", json.dumps(header_add),0)
-time.sleep(3)
-mqttc.publish("/GPIO1/CONFIG/ii", json.dumps(openhab_on),0)
+#time.sleep(3)
+#mqttc.publish("/GPIO1/CONFIG/ii", json.dumps(openhab_on),0)
 time.sleep(3)
 mqttc.publish("/GPIO1/MCP23017_2/Port9", json.dumps(openhab_off),0)
 #time.sleep(3)

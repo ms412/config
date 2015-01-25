@@ -234,7 +234,7 @@ class msgadapter(Thread,msgbus):
                #     print('TEMP',devices_msg)
             #print('Result',devices_msg)
             msg={}
-            msg['CHANNEL']=devices_msg
+            msg['DEVICES']=devices_msg
             msg['MESSAGE'] = self._generate_header('REQUEST')
 
         else:
