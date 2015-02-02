@@ -68,3 +68,14 @@ DEVICES:
    #UPDATE Inteval
    INITIAL: ON
 
+  LCD-01:
+    MODE: LCD
+    PIN_RS: 16
+    PIN_E: 15
+    PIN_D: [14,13,12,11]
+
+  S0-01:
+    MODE: S0
+    HWID: 4
+    FACTOR: 2000
+

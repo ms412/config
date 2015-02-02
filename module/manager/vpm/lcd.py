@@ -17,9 +17,9 @@ class lcd(msgbus):
         PIN_E: <int>
         PIN_D: <int_array>
     }
-    PIN_RS = hardware ID of the RS-Pin number of the hardware device; type int
-    PIN_E  = hardware ID of the Enable-Pin number of the hardware device; type int
-    PIN_D  = hardware ID of the Data-Pin 1-4 number of the hardware device; type int array
+    PIN_RS = hardware ID of the RS-Pin number at the hardware device; type int
+    PIN_E  = hardware ID of the Enable-Pin number at the hardware device; type int
+    PIN_D  = hardware ID of the Data-Pin 1-4 number at the hardware device; type int array
 
     +++ Request Parameters +++
     VDM_ID {

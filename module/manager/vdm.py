@@ -4,6 +4,7 @@ import time
 
 from library.libmsgbus import msgbus
 
+
 '''
 import device interface drivers
 '''
@@ -18,6 +19,7 @@ from module.manager.vpm.binout import binout
 from module.manager.vpm.trigger import trigger
 #from module.manager.vpm.timerout import pulse
 from module.mangager.vpm.lcd import lcd
+from module.manager.vpm.S0 import S0
 #from module.manager.vpm.pwm import pwm
 #from module.manager.vpm.timerin import timerin
 
@@ -318,6 +320,10 @@ class vdm(Thread,msgbus):
 
             elif 'LCD' in self._PIN_MODE:
                 self._VPMobj[portID]=lcd(portID,self._hwHandle,self._on_notify)
+                result = True
+
+            elif 'S0' in self._PIN_MODE:
+                self._VPMobj[portID]=S0(portID,self._hwHandle,self._on_notify)
                 result = True
 
             else:

@@ -22,7 +22,7 @@ class binout(msgbus):
     INITIAL = initial value of the pin polarity after device reset, configuration according OFF/ON_VALUE; type string
     INTERVAL = update interval reports the current state of the pin after a pre-configured time interval, accuracy depending on the concerning VDM update interval on the,
                 expected value is integer; default is 0 -> no update interval; type float
-    HWID = hardware ID of the pin number of the hardware device; type int
+    HWID = hardware ID of the pin number at the hardware device; type int
 
     +++ Request Parameters +++
     VDM_ID {
