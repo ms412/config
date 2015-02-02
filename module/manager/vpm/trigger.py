@@ -8,6 +8,14 @@ from library.libmsgbus import msgbus
 
 class trigger(msgbus):
     '''
+    Function
+    in case of a request port changes polarity for a pre-configure time and switch back after timer is expired
+
+    Configuration Options
+    HWID: hw address of the I/O pin
+    INITIAL: inital value of the pin (ON/OFF)
+    TIMER: float value in seconds how long the interface will change the polarity
+
     Mandatory values
     vpmID contains unique ID of the VPM instance -> Port-Section-Name in Configuration
     hwHandle is the object instance performing operation on the hardware, started by the Virtual Device Manger(VDM)
@@ -90,7 +98,7 @@ class trigger(msgbus):
         print('Config interface')
         self._off_value = str(cfg.getNode('OFF_VALUE','OFF'))
         self._on_value = str(cfg.getNode('ON_VALUE','ON'))
-        self._puls_length = float(cfg.getNode('PULS_LENGTH',10))
+        self._timer = float(cfg.getNode('TIMER',10))
         self._initial = str(cfg.getNode('INITIAL',None))
         self._hwid = int(cfg.getNode('HWID',None))
 
@@ -187,7 +195,7 @@ class trigger(msgbus):
 
         msgtype = msg.get('TYPE',None)
         cmd = msg.get('COMMAND',None)
-        puls_length = float(msg.get('PULS_LENGTH',-1))
+        temp_timer = float(msg.get('TIMER',-1))
       #  print('Get Notification',msg,msgtype)
         logmsg = 'Notification received'
         self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, msg))
@@ -197,18 +205,18 @@ class trigger(msgbus):
                 self._trigger_act = True
                 self._hwHandle.WritePin(self._hwid, 1)
                 self._pin_save  = self._on_value
-                if puls_length < 1:
-                    self._T1 = time.time() + self._puls_length
+                if temp_timer < 1:
+                    self._T1 = time.time() + self._timer
                 else:
-                    self._T1 = time.time() + puls_length
+                    self._T1 = time.time() + temp_timer
             elif self._off_value in cmd:
                 self._trigger_act = True
                 self._hwHandle.WritePin(self._hwid, 0)
                 self._pin_save  = self._off_value
-                if puls_length < 1:
-                    self._T1 = time.time() + self._puls_length
+                if temp_timer < 1:
+                    self._T1 = time.time() + self._timer
                 else:
-                    self._T1 = time.time() + puls_length
+                    self._T1 = time.time() + temp_timer
             else:
                 logmsg = 'Command unknown'
                 self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('ERROR', self._mode, self._VPM_ID, logmsg, cmd))

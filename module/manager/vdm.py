@@ -16,7 +16,8 @@ import port manager
 from module.manager.vpm.binin import binin
 from module.manager.vpm.binout import binout
 from module.manager.vpm.trigger import trigger
-from module.manager.vpm.pulse import pulse
+#from module.manager.vpm.timerout import pulse
+from module.mangager.vpm.lcd import lcd
 #from module.manager.vpm.pwm import pwm
 #from module.manager.vpm.timerin import timerin
 
@@ -313,6 +314,10 @@ class vdm(Thread,msgbus):
 
             elif 'PULSE' in self._PIN_MODE:
                 self._VPMobj[portID]=trigger(portID,self._hwHandle,self._on_notify)
+                result = True
+
+            elif 'LCD' in self._PIN_MODE:
+                self._VPMobj[portID]=lcd(portID,self._hwHandle,self._on_notify)
                 result = True
 
             else:

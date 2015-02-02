@@ -6,8 +6,16 @@ from library.libmsgbus import msgbus
 
 #from module.manager.vdm import vdm
 
-class pulse(msgbus):
+class timerout(msgbus):
     '''
+    Function
+    in case of a request port changes polarity for a pre-configure time and switch back after timer is expired
+
+    Configuration Options
+    HWID
+    INITIAL
+    TIMER
+
     Mandatory values
     vpmID contains unique ID of the VPM instance -> Port-Section-Name in Configuration
     hwHandle is the object instance performing operation on the hardware, started by the Virtual Device Manger(VDM)
@@ -90,7 +98,7 @@ class pulse(msgbus):
         #print('Config interface')
         #self._off_value = str(cfg.getNode('OFF_VALUE','OFF'))
         #self._on_value = str(cfg.getNode('ON_VALUE','ON'))
-        self._puls_on = float(cfg.getNode('PULS_ON',10))
+        self._puls_on = float(cfg.getNode('TIMER',10))
         self._puls_off = float(cfg.getNode('PULS_OFF',self._puls_on))
         self._initial = str(cfg.getNode('INITIAL',None))
         self._hwid = int(cfg.getNode('HWID',None))

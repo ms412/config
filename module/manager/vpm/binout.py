@@ -7,21 +7,41 @@ from library.libmsgbus import msgbus
 
 class binout(msgbus):
     '''
-    Mandatory values
-    vpmID contains unique ID of the VPM instance -> Port-Section-Name in Configuration
-    hwHandle is the object instance performing operation on the hardware, started by the Virtual Device Manger(VDM)
-    each port manager (VPM) started from a VDM Instance has the same hwHandle
-    callback contains the notification interface of the concerning VDM instance
+    +++ Function +++
+    configures the pin as Input
 
-    _mode = contains the mode type of the VPM object
+    +++ Configuration Parameter +++
+    VDM_ID {
+        OFF_VALUE: <string>
+        ON_VALUE: <string>
+        INITIAL: <string>
+        HWID: <int>
+    }
+    OFF_VALUE = contains parameter returned in case port has low potential at it's interface, if not configured in config file = 'OFF'; type string
+    ON_VALUE = contains parameter returned in case port has high potential at it's interface, if not configured in config file = 'ON'; type string
+    INITIAL = initial value of the pin polarity after device reset, configuration according OFF/ON_VALUE; type string
+    INTERVAL = update interval reports the current state of the pin after a pre-configured time interval, accuracy depending on the concerning VDM update interval on the,
+                expected value is integer; default is 0 -> no update interval; type float
+    HWID = hardware ID of the pin number of the hardware device; type int
 
-    ++ Mandatory Values ++
-    _hwid = contains the hardware address of the concerning Pin (from configuration file)
+    +++ Request Parameters +++
+    VDM_ID {
+        TYPE: SET
+        COMMAND: <string>
+    }
 
-    ++ Optional Values ++
-    OFF_VALUE = contains parameter returned in case port has low potential at it's interface, if not configured in config file = 'OFF'
-    ON_VALUE = contains parameter returned in case port has high potential at it's interface, if not configured in config file = 'ON'
-    INITIAL = contains the port value during the startup, default value parameter as defined in the OFF_VALUE parameter
+    TYPE: SET indicates that the port pin shall be set; type string
+    COMMAND: value must be either OFF or ON_VALUE as defined above; type string
+
+    +++ Return Parameters +++
+    VPM_ID {
+        VALUE: <string>
+        MSG: <string>
+        STATE: True/False
+    }
+    VALUE: current state of the port pin as defined in OFF/ON_VALUE; type string
+    MSG: in case a detailed message is available it will be delivered in this object; type string
+    STATE: either True or False indicates state of the message; type bool
     '''
 
     def __init__(self,ID,hwHandle,callback):
@@ -98,7 +118,7 @@ class binout(msgbus):
         '''
         self._OFF_VALUE = str(cfg.getNode('OFF_VALUE','OFF'))
         self._ON_VALUE = str(cfg.getNode('ON_VALUE','ON'))
-        self._INITIAL = str(cfg.getNode('INITIAL',None))
+        self._INITIAL = str(cfg.getNode('INITIAL','self._OFF_VALUE'))
         self._hwid = int(cfg.getNode('HWID',None))
 
         if not self._hwid:
