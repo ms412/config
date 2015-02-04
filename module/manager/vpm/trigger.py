@@ -176,7 +176,7 @@ class trigger(msgbus):
         notify_msg['VALUE'] = pin_act
         if msg:
             notify_msg['MSG'] = msg
-        notify_msg['STATE'] = True
+        notify_msg['STATE'] = 'TRUE'
 
       #  print ('Sent Notification:,',notify_msg)
         logmsg = 'Notification send to VDM'

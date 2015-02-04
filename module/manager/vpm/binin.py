@@ -129,6 +129,7 @@ class binin(msgbus):
         read pin state
         '''
         result = self._hwHandle.ReadPin(self._hwid)
+      #  print('Binin',result,self._hwid)
 
         if result == 0:
             pin_act = self._off_value
@@ -174,7 +175,7 @@ class binin(msgbus):
         msg_container['VALUE'] = self._pin_save
         if msg:
             msg_container['MSG'] = msg
-        msg_container['STATE'] = True
+        msg_container['STATE'] = 'TRUE'
 
         container[self._VPM_ID]=msg_container
 

@@ -99,16 +99,16 @@ class S0(msgbus):
         self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s Message: %s'%('INFO', self._mode, self._VPM_ID, msg))
 
         cfg = msg.select(self._VPM_ID)
-        print('Config interface')
-        self._interval = int(cfg.getNode('FACTOR',0))
+        print('Config interface S0', self._VPM_ID)
+        self._factor = int(cfg.getNode('FACTOR',0))
         self._hwid = int(cfg.getNode('HWID',None))
 
         if not self._hwid:
             logmsg = 'HWID is missing in config'
             self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
-           # print('VPM::ERROR no HWID in config')
+            print('S0 VPM::ERROR no HWID in config')
         else:
-        #    print('VPM:', self._hwid)
+            print('S0 VPM:', self._hwid)
             self._hwHandle.ConfigIO(self._hwid,'IN')
 
             '''
@@ -136,6 +136,8 @@ class S0(msgbus):
         run is getting called on a regular base from VDM, frequency of calls defined by update value in VDM configuration section
         '''
 
+  #      print('run',self._hwHandle.ReadPin(self._hwid),self._hwid)
+
         if self._SavePinState > 1 and self._hwHandle.ReadPin(self._hwid) == 0:
 
            # print "state1"
@@ -158,8 +160,8 @@ class S0(msgbus):
                 print ("delta T1:",self._T1)
                 self._T0 = time.time()
                 print ("T0new", self._T0)
-                self.Power()
-                self.Energy()
+                self._power()
+                self._energy()
                 self._T2 = 0
                 self.notify('UPDATE')
                 print ("SavePinState", self._SavePinState)
@@ -197,7 +199,7 @@ class S0(msgbus):
         msg_container['DELTA'] = self._energyDelta
         if msg:
             msg_container['MSG'] = msg
-        msg_container['STATE'] = True
+        msg_container['STATE'] = 'TRUE'
 
         container[self._VPM_ID]=msg_container
 
@@ -236,14 +238,14 @@ class S0(msgbus):
         return True
 
     def _power(self):
-        self._watt = 1/self._FACTOR * 3600 / self._T1 * 1000
+        self._watt = 1/self._factor * 3600 / self._T1 * 1000
         self._pulsCount = self._pulsCount +1
         print ("Watt", self._watt)
 
         return self._watt
 
     def _energy(self):
-        energyCurr = float(self._pulsCount / self._FACTOR)
+        energyCurr = float(self._pulsCount / self._factor)
         self._energyDelta = energyCurr - self._energySum
         self._energySum = energyCurr
  #       print self._pulsCount / self._E_FACTOR

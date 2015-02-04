@@ -38,12 +38,12 @@ DEVICES:
   SYSTEM: RASPBERRY_B1
   I2C_ADDRESS: 0x26
   TYPE: MCP23017
-  UPDATE: 1.0
+  UPDATE: 0.1
   #NAME: DEVICE02
 
   IO-01:
  #  NAME: GPIO100
-   HWID: 1
+   HWID: 0
    ON_VALUE: OPEN
    OFF_VALUE: CLOSED
    MODE: BINARY-IN
@@ -52,7 +52,7 @@ DEVICES:
 
   IO-02:
  #  NAME: GPIO100
-   HWID: 2
+   HWID: 1
    ON_VALUE: OPEN
    OFF_VALUE: CLOSED
    MODE: BINARY-IN
@@ -68,14 +68,34 @@ DEVICES:
    #UPDATE Inteval
    INITIAL: ON
 
-  LCD-01:
-    MODE: LCD
-    PIN_RS: 16
-    PIN_E: 15
-    PIN_D: [14,13,12,11]
+  IO-10:
+ #  NAME: GPIO100
+   HWID: 10
+   ON_VALUE: ON
+   OFF_VALUE: OFF
+   MODE: BINARY-OUT
+   #UPDATE Inteval
+   INITIAL: OFF
+
+  IO-11:
+   HWID: 11
+   TIMER: 10
+   INITIAL: OFF
+   MODE: TRIGGER
+
+
+ # LCD-01:
+ #   MODE: LCD
+ #   PIN_RS: 8
+ #   PIN_E: 7
+ #   PIN_D: [6,5,4,3]
 
   S0-01:
     MODE: S0
-    HWID: 4
+    HWID: 6
     FACTOR: 2000
 
+  S0-02:
+    MODE: S0
+    HWID: 7
+    FACTOR: 2000
