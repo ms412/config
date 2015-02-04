@@ -97,20 +97,23 @@ class lcd(msgbus):
         self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s Message: %s'%('INFO', self._mode, self._VPM_ID, msg))
 
         cfg = msg.select(self._VPM_ID)
-        print('Config interface')
+
         self._pin_rs = int(cfg.getNode('PIN_RS',None))
         self._pin_e = int(cfg.getNode('PIN_E',None))
         self._pin_d = list(cfg.getNode('PIN_D',None))
-
-        if not self._pin_rs | self._pin_e | self._pin_d:
-            logmsg = 'Either of the mandatory Port Pin configuration is missing'
+       # test = map(int,self._pin_d)
+        self._pin_d = [int(i) for i in self._pin_d]
+        print('LCD Config interface',self._pin_rs, self._pin_e, self._pin_d)
+        if not self._pin_rs or not self._pin_e or not self._pin_d:
+            logmsg = 'One of the mandatory Port Pin configuration is missing'
             self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
            # print('VPM::ERROR no HWID in config')
         else:
         #    print('VPM:', self._hwid)
             self._hwHandle.ConfigIO(self._pin_rs,'OUT')
-            self._hwHandle.ConfigIO(self._pin_r,'OUT')
+            self._hwHandle.ConfigIO(self._pin_e,'OUT')
             for pin in self._pin_d:
+                print('LCD pin id',pin)
                 self._hwHandle.ConfigIO(pin,'OUT')
 
             self._lcd_reset()
@@ -180,7 +183,7 @@ class lcd(msgbus):
     def _lcd_cmd(self, bits, char_mode=False):
         """ Send command to LCD """
 
-        sleep(0.001)
+        time.sleep(0.001)
         bits=bin(bits)[2:].zfill(8)
 
         self._hwHandle.WritePin(self._pin_rs, char_mode)
@@ -191,6 +194,7 @@ class lcd(msgbus):
             self._hwHandle.WritePin(pin,'0')
 
         for i in range(4):
+            print ('Int',i,bits,bits[i],self._pin_d,self._pin_d[::-1][i])
             if bits[i] == "1":
                 self._hwHandle.WritePin(self._pin_d[::-1][i],'1')
 
@@ -199,7 +203,7 @@ class lcd(msgbus):
       #  GPIO.output(self.pin_e, True)
        # GPIO.output(self.pin_e, False)
 
-        for pin in self._pins_d:
+        for pin in self._pin_d:
             self._hwHandle.WritePin(pin,'0')
 
         for i in range(4,8):
@@ -216,19 +220,19 @@ class lcd(msgbus):
     def _lcd_reset(self):
         """ Blank / Reset LCD """
 
-        self.cmd(0x33) # $33 8-bit mode
-        self.cmd(0x32) # $32 8-bit mode
-        self.cmd(0x28) # $28 8-bit mode
-        self.cmd(0x0C) # $0C 8-bit mode
-        self.cmd(0x06) # $06 8-bit mode
-        self.cmd(0x01) # $01 8-bit mode
+        self._lcd_cmd(0x33) # $33 8-bit mode
+        self._lcd_cmd(0x32) # $32 8-bit mode
+        self._lcd_cmd(0x28) # $28 8-bit mode
+        self._lcd_cmd(0x0C) # $0C 8-bit mode
+        self._lcd_cmd(0x06) # $06 8-bit mode
+        self._lcd_cmd(0x01)# $01 8-bit mode
 
     def _lcd_message(self, text):
         """ Send string to LCD. Newline wraps to second line"""
 
         for char in text:
             if char == '\n':
-                self.cmd(0xC0) # next line
+                self._lcd_cmd(0xC0) # next line
             else:
-                self.cmd(ord(char),True)
+                self._lcd_cmd(ord(char),True)
 

@@ -18,7 +18,7 @@ from module.manager.vpm.binin import binin
 from module.manager.vpm.binout import binout
 from module.manager.vpm.trigger import trigger
 #from module.manager.vpm.timerout import pulse
-from module.mangager.vpm.lcd import lcd
+from module.manager.vpm.lcd import lcd
 from module.manager.vpm.S0 import S0
 #from module.manager.vpm.pwm import pwm
 #from module.manager.vpm.timerin import timerin

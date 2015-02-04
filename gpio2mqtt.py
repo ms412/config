@@ -88,8 +88,8 @@ class manager(msgbus):
 if __name__ == "__main__":
 
     print ('main')
-    if len(sys.argv) == 3:
-        configfile = sys.argv[2]
+    if len(sys.argv) == 2:
+        configfile = sys.argv[1]
     else:
         configfile = '/etc/gpio2mqtt/gpio2mqtt.yaml'
 

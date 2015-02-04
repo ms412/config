@@ -136,12 +136,12 @@ class S0(msgbus):
         run is getting called on a regular base from VDM, frequency of calls defined by update value in VDM configuration section
         '''
 
-        if self._SavePinState > 1 and self._hwHandle.ReadPin(self._HWID) == 0:
+        if self._SavePinState > 1 and self._hwHandle.ReadPin(self._hwid) == 0:
 
            # print "state1"
             print ("SavePinState", self._SavePinState)
-            print ("PinState", self._hwHandle.ReadPin(self._HWID))
-            self._SavePinState = self._hwHandle.ReadPin(self._HWID)
+            print ("PinState", self._hwHandle.ReadPin(self._hwid))
+            self._SavePinState = self._hwHandle.ReadPin(self._hwid)
 
             if self._T0 == 0:
                 '''
@@ -163,15 +163,15 @@ class S0(msgbus):
                 self._T2 = 0
                 self.notify('UPDATE')
                 print ("SavePinState", self._SavePinState)
-                print ("PinState", self._hwHandle.ReadPin(self._HWID))
+                print ("PinState", self._hwHandle.ReadPin(self._hwid))
 #                watt = 1/factor*3600/self._T1*1000
 
 
-        elif self._SavePinState == 0 and self._hwHandle.ReadPin(self._HWID) > 1:
+        elif self._SavePinState == 0 and self._hwHandle.ReadPin(self._hwid) > 1:
             print ("State2")
             print ("SavePinState", self._SavePinState)
-            print ("PinState", self._hwHandle.ReadPin(self._HWID))
-            self._SavePinState = self._hwHandle.ReadPin(self._HWID)
+            print ("PinState", self._hwHandle.ReadPin(self._hwid))
+            self._SavePinState = self._hwHandle.ReadPin(self._hwid)
 
       #  return update
        # self._counter = self._counter +1
@@ -238,7 +238,7 @@ class S0(msgbus):
     def _power(self):
         self._watt = 1/self._FACTOR * 3600 / self._T1 * 1000
         self._pulsCount = self._pulsCount +1
-        print "Watt", self._watt
+        print ("Watt", self._watt)
 
         return self._watt
 
@@ -247,5 +247,5 @@ class S0(msgbus):
         self._energyDelta = energyCurr - self._energySum
         self._energySum = energyCurr
  #       print self._pulsCount / self._E_FACTOR
-        print "Energy Current %f" % energyCurr, "EnergyDelata %f" % self._energyDelta, "EnergySum %f" % self._energySum, "Pulscounte", self._pulsCount
+        print ("Energy Current %f" % energyCurr, "EnergyDelata %f" % self._energyDelta, "EnergySum %f" % self._energySum, "Pulscounte", self._pulsCount)
         return True
