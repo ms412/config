@@ -121,8 +121,10 @@ class binout(msgbus):
         self._INITIAL = str(cfg.getNode('INITIAL','self._OFF_VALUE'))
         self._hwid = int(cfg.getNode('HWID',None))
 
-        if not self._hwid:
-            print('VPM::ERROR no HWID in config')
+        if self._hwid is None:
+            logmsg = 'HWID is missing in config'
+            self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
+           # print('VPM::ERROR no HWID in config')
         else:
            # print('VPM:', self._hwid)
             self._hwHandle.ConfigIO(self._hwid,'OUT')

@@ -110,7 +110,7 @@ class binin(msgbus):
         self._interval = int(cfg.getNode('INTERVAL',0.0))
         self._hwid = int(cfg.getNode('HWID',None))
 
-        if not self._hwid:
+        if self._hwid is None:
             logmsg = 'HWID is missing in config'
             self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
            # print('VPM::ERROR no HWID in config')

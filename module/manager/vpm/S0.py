@@ -103,7 +103,7 @@ class S0(msgbus):
         self._factor = int(cfg.getNode('FACTOR',0))
         self._hwid = int(cfg.getNode('HWID',None))
 
-        if not self._hwid:
+        if self._hwid is None:
             logmsg = 'HWID is missing in config'
             self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
             print('S0 VPM::ERROR no HWID in config')
@@ -194,7 +194,7 @@ class S0(msgbus):
         container = {}
         msg_container = {}
 
-        msg_container['WATT'] = self._watt
+        msg_container['POWER'] = self._watt
         msg_container['ENERGY'] = self._energySum
         msg_container['DELTA'] = self._energyDelta
         if msg:
@@ -240,7 +240,7 @@ class S0(msgbus):
     def _power(self):
         self._watt = 1/self._factor * 3600 / self._T1 * 1000
         self._pulsCount = self._pulsCount +1
-        print ("Watt", self._watt)
+        print ("POWER", self._watt)
 
         return self._watt
 
