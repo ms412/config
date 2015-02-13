@@ -145,7 +145,7 @@ class binin(msgbus):
                 self._T0 = time.time()
                 logmsg = ' Timeinterval expired'
                 self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
-                self.notify()
+                self.notify('UPDATE')
 
        # print('PinSave',self._pin_save,'PinAct',pin_act)
         '''

@@ -56,7 +56,7 @@ class trigger(msgbus):
         Define class variables
         '''
         self._pin_save = 'Unknown'
-        #self._T0 = time.time()
+        self._T0 = time.time()
         self._T1 = 0.0
         self._trigger_act = False
 
@@ -100,6 +100,7 @@ class trigger(msgbus):
         self._on_value = str(cfg.getNode('ON_VALUE','ON'))
         self._timer = float(cfg.getNode('TIMER',10))
         self._initial = str(cfg.getNode('INITIAL',None))
+        self._interval = int(cfg.getNode('INTERVAL',0.0))
         self._hwid = int(cfg.getNode('HWID',None))
 
         if self._hwid is None:
@@ -144,11 +145,22 @@ class trigger(msgbus):
                 if self._initial == self._on_value:
                     self._hwHandle.WritePin(self._hwid, 1)
                     self._pin_save  = self._on_value
+                    self.notify()
                 else:
                     self._hwHandle.WritePin(self._hwid, 0)
                     self._pin_save  =  self._off_value
+                    self.notify()
 
-
+        '''
+        if a update interval defined, send notification message after each completed interval
+        '''
+        if self._interval > 0:
+            if (self._T0 + self._interval) < time.time():
+              #  print('Timeinterval', self._T0 + self._interval,'Actual',time.time())
+                self._T0 = time.time()
+                logmsg = ' Timeinterval expired'
+                self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
+                self.notify('UPDATE')
 
         return True
 
@@ -170,19 +182,36 @@ class trigger(msgbus):
         else:
             pin_act = self._on_value
 
-        notify_msg= {}
+       # notify_msg= {}
 
-        notify_msg['PORT_ID'] = self._VPM_ID
-        notify_msg['VALUE'] = pin_act
+        #notify_msg['PORT_ID'] = self._VPM_ID
+       # notify_msg['VALUE'] = pin_act
+        #if msg:
+         #   notify_msg['MSG'] = msg
+        #notify_msg['STATE'] = 'TRUE'
+
+
+
+
+        container = {}
+        msg_container = {}
+
+        msg_container['VALUE'] = self._pin_save
         if msg:
-            notify_msg['MSG'] = msg
-        notify_msg['STATE'] = 'TRUE'
+            msg_container['MSG'] = msg
+        msg_container['STATE'] = 'TRUE'
+
+        container[self._VPM_ID]=msg_container
+
+        logmsg = 'Notification send to VDM'
+        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, container))
+
 
       #  print ('Sent Notification:,',notify_msg)
-        logmsg = 'Notification send to VDM'
-        self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, notify_msg))
+       # logmsg = 'Notification send to VDM'
+        #self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, notify_msg))
 
-        self._callback(notify_msg)
+        self._callback(container)
 
         return True
 

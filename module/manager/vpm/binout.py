@@ -1,5 +1,6 @@
 
 import json
+import time
 from queue import Queue
 
 from library.libmsgbus import msgbus
@@ -67,6 +68,7 @@ class binout(msgbus):
         '''
         self._pin_save = 'Unknown'
         self._update = False
+        self._T0 = time.time()
 
         '''
         Maintenance Counter
@@ -116,9 +118,10 @@ class binout(msgbus):
         '''
         optional configuration Items
         '''
-        self._OFF_VALUE = str(cfg.getNode('OFF_VALUE','OFF'))
-        self._ON_VALUE = str(cfg.getNode('ON_VALUE','ON'))
-        self._INITIAL = str(cfg.getNode('INITIAL','self._OFF_VALUE'))
+        self._off_value = str(cfg.getNode('OFF_VALUE','OFF'))
+        self._on_value = str(cfg.getNode('ON_VALUE','ON'))
+        self._initial = str(cfg.getNode('INITIAL','self._off_value'))
+        self._interval = int(cfg.getNode('INTERVAL',0.0))
         self._hwid = int(cfg.getNode('HWID',None))
 
         if self._hwid is None:
@@ -132,13 +135,13 @@ class binout(msgbus):
         '''
         set initial configuration
         '''
-        if self._INITIAL == self._ON_VALUE:
+        if self._initial == self._on_value:
             self._hwHandle.WritePin(self._hwid, 1)
-            self._pin_save  = self._ON_VALUE
+            self._pin_save  = self._on_value
         else:
             self._hwHandle.WritePin(self._hwid, 0)
-            self._pin_save  =  self._OFF_VALUE
-         #   self.Set(self._INITIAL)
+            self._pin_save  =  self._off_value
+         #   self.Set(self._initial)
 
         return True
 
@@ -147,6 +150,17 @@ class binout(msgbus):
         Run Task
         '''
         self._counter = self._counter +1
+
+        '''
+        if a update interval defined, send notification message after each completed interval
+        '''
+        if self._interval > 0:
+            if (self._T0 + self._interval) < time.time():
+              #  print('Timeinterval', self._T0 + self._interval,'Actual',time.time())
+                self._T0 = time.time()
+                logmsg = ' Timeinterval expired'
+                self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
+                self.notify('UPDATE')
 
 
         return True
@@ -157,16 +171,16 @@ class binout(msgbus):
         '''
 
         msgtype = msg.get('TYPE',None)
-        cmd = msg.get('COMMAND',self._OFF_VALUE)
+        cmd = msg.get('COMMAND',self._off_value)
         print('Set Request',msg,msgtype,cmd)
 
         if 'SET' in msgtype:
-            if self._ON_VALUE in cmd:
+            if self._on_value in cmd:
                 self._hwHandle.WritePin(self._hwid, 1)
-                self._pin_save  = self._ON_VALUE
-            elif self._OFF_VALUE in cmd:
+                self._pin_save  = self._on_value
+            elif self._off_value in cmd:
                 self._hwHandle.WritePin(self._hwid, 0)
-                self._pin_save  = self._OFF_VALUE
+                self._pin_save  = self._off_value
             else:
                 self.msgbus_publish('LOG','%s VPM BinaryOut Port: %s Unknown value'%('ERROR',cmd))
         else:

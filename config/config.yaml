@@ -25,6 +25,12 @@ DEVICES:
   UPDATE: 1.0
   #NAME: DEVICE02
 
+  LCD-01:
+   MODE: LCD
+   PIN_RS: 7
+   PIN_E: 8
+   PIN_D: [25,24,23,18]
+
   IO-17:
  #  NAME: GPIO100
    HWID: 17
@@ -65,7 +71,7 @@ DEVICES:
    ON_VALUE: ON
    OFF_VALUE: OFF
    MODE: BINARY-OUT
-   #UPDATE Inteval
+   INTERVAL: 60
    INITIAL: ON
 
   IO-10:
@@ -74,21 +80,15 @@ DEVICES:
    ON_VALUE: ON
    OFF_VALUE: OFF
    MODE: BINARY-OUT
-   #UPDATE Inteval
+   INTERVAL: 60
    INITIAL: OFF
 
   IO-11:
    HWID: 11
    TIMER: 10
    INITIAL: OFF
+   INTERVAL: 60
    MODE: TRIGGER
-
-
- # LCD-01:
- #   MODE: LCD
- #   PIN_RS: 8
- #   PIN_E: 7
- #   PIN_D: [6,5,4,3]
 
   S0-01:
     MODE: S0

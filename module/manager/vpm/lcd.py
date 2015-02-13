@@ -191,28 +191,28 @@ class lcd(msgbus):
        # GPIO.output(self.pin_rs, char_mode)
 
         for pin in self._pin_d:
-            self._hwHandle.WritePin(pin,'0')
+            self._hwHandle.WritePin(pin,0)
 
         for i in range(4):
             print ('Int',i,bits,bits[i],self._pin_d,self._pin_d[::-1][i])
             if bits[i] == "1":
-                self._hwHandle.WritePin(self._pin_d[::-1][i],'1')
+                self._hwHandle.WritePin(self._pin_d[::-1][i],1)
 
-        self._hwHandle.WritePin(self._pin_e,'1')
-        self._hwHandle.WritePin(self._pin_e,'0')
+        self._hwHandle.WritePin(self._pin_e,1)
+        self._hwHandle.WritePin(self._pin_e,0)
       #  GPIO.output(self.pin_e, True)
        # GPIO.output(self.pin_e, False)
 
         for pin in self._pin_d:
-            self._hwHandle.WritePin(pin,'0')
+            self._hwHandle.WritePin(pin,0)
 
         for i in range(4,8):
             if bits[i] == "1":
-                self._hwHandle.WritePin(self._pin_d[::-1][i-4],'1')
+                self._hwHandle.WritePin(self._pin_d[::-1][i-4],1)
               #  GPIO.output(self.pins_db[::-1][i-4], True)
 
-        self._hwHandle.WritePin(self._pin_e,'1')
-        self._hwHandle.WritePin(self._pin_e,'0')
+        self._hwHandle.WritePin(self._pin_e,1)
+        self._hwHandle.WritePin(self._pin_e,0)
 
     #@    GPIO.output(self.pin_e, True)
      #   GPIO.output(self.pin_e, False)

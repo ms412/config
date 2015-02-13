@@ -56,3 +56,33 @@ wget https://gist.githubusercontent.com/sebastianludwig/c648a9e06c0dc2264fbd/raw
     sudo python3 setup.py install
 
     http://procrastinative.ninja/2014/07/21/smbus-for-python34-on-raspberry/
+
+
+ Install:
+ YAML
+ sudo apt-get install python3-yaml
+
+ Paho
+ sudo apt-get install python3-pip
+ sudo pip3 install paho-mqtt
+
+RPIO
+$ sudo apt-get install python3-setuptools
+$ sudo easy_install3 -U RPIO
+
+wget https://pypi.python.org/packages/source/R/RPi.GPIO/RPi.GPIO-0.5.9.tar.gz
+tar xvf RPi.GPIO-0.5.9.tar.gz
+cd RPi.GPIO-0.5.9/
+
+
+smbtools
+cd ~
+sudo apt-get -y install python3-dev
+wget http://ftp.de.debian.org/debian/pool/main/i/i2c-tools/i2c-tools_3.1.0.orig.tar.bz2
+tar xf i2c-tools_3.1.0.orig.tar.bz2
+cd i2c-tools-3.1.0/py-smbus
+mv smbusmodule.c smbusmodule.c.orig
+wget -O smbusmodule.c http://piborg.org/downloads/picoborgrev/smbusmodule.c.txt
+wget http://lm-sensors.org/svn/lm-sensors/tags/V2-10-8/kernel/include/i2c-dev.h
+python3 setup.py build
+sudo python3 setup.py install
