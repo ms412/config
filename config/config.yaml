@@ -90,6 +90,13 @@ DEVICES:
    INTERVAL: 60
    MODE: TRIGGER
 
+  IO-12:
+   HWID: 12
+   MODE: PULSE
+   PULSE_OFF: 5.0
+   PULSE_ON: 10.1
+   NOTIFY: ON
+
   S0-01:
     MODE: S0
     HWID: 6
