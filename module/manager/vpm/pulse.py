@@ -9,13 +9,13 @@ from library.libmsgbus import msgbus
 class pulsee(msgbus):
     '''
     Function
-    sends out pulsees, on and off pulsee times can be configured in configuration file or by request. The function can be
-    enabled or disabled
+    switch on/off the I/O port for a pre configured period. The ON/OFF period can be pre configured.
 
     Configuration Options
     HWID
-    INITIAL
-    TIMER
+    PULSE_OFF
+    PULSE_ON
+    MODE: PULSE
 
     Mandatory values
     vpmID contains unique ID of the VPM instance -> Port-Section-Name in Configuration
@@ -209,9 +209,8 @@ class pulsee(msgbus):
 
         msgtype = msg.get('TYPE',None)
         cmd = msg.get('COMMAND',None)
-        self._pulse_on = float(cfg.getNode('PULSE_ON',self._pulse_on))
-        self._pulse_off = float(cfg.getNode('PULSE_OFF',self._pulse_off))
-        pulse_length = float(msg.get('pulse_LENGTH',-1))
+        self._pulse_on('PULSE_ON',self._pulse_on)
+        self._pulse_off('PULSE_OFF',self._pulse_off)
 
         logmsg = 'Notification received'
         self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s , %s'%('INFO', self._mode, self._VPM_ID, logmsg, msg))
@@ -220,7 +219,8 @@ class pulsee(msgbus):
             if 'START' in cmd:
                 self._pulse_state = 'T0'
 
-            elif self._off_value in cmd:
+
+            elif 'STOP' in cmd:
                 self._pulse_state = 'STOP'
 
             else:
@@ -232,4 +232,4 @@ class pulsee(msgbus):
             self.msgbus_publish('LOG','%s Mode: %s ID: %s; Message: %s , %s'%('ERROR', self._mode, self._VPM_ID, logmsg, msgtype))
             #print('Messagetype unknown')
 
-    return True
+        return True
