@@ -17,11 +17,11 @@ import port manager
 from module.manager.vpm.binin import binin
 from module.manager.vpm.binout import binout
 from module.manager.vpm.trigger import trigger
-#from module.manager.vpm.timerout import pulse
+from module.manager.vpm.timerout import pulse
 from module.manager.vpm.lcd import lcd
 from module.manager.vpm.S0 import S0
-#from module.manager.vpm.pwm import pwm
-#from module.manager.vpm.timerin import timerin
+from module.manager.vpm.pwm import pwm
+from module.manager.vpm.timerin import timerin
 
 class vdm(Thread,msgbus):
     '''
@@ -315,7 +315,7 @@ class vdm(Thread,msgbus):
                 result = True
 
             elif 'PULSE' in self._PIN_MODE:
-                self._VPMobj[portID]=trigger(portID,self._hwHandle,self._on_notify)
+                self._VPMobj[portID]=pulse(portID,self._hwHandle,self._on_notify)
                 result = True
 
             elif 'LCD' in self._PIN_MODE:
@@ -325,6 +325,23 @@ class vdm(Thread,msgbus):
             elif 'S0' in self._PIN_MODE:
                 self._VPMobj[portID]=S0(portID,self._hwHandle,self._on_notify)
                 result = True
+
+            elif 'TIMER-IN' in self._PIN_MODE:
+                self._VPMobj[portID]=timerin(portID,self._hwHandle,self._on_notify)
+                result = True
+
+            elif 'PWM' in self._PIN_MODE:
+                '''
+                mode only supported at raspberry I/O ports
+                i2c devices do not support this mode
+                '''
+                if 'RASPBERRY' in self._DEVICE_TYPE:
+                    self._VPMobj[portID]=pwm(portID,self._hwHandle,self._on_notify)
+                    result = True
+                else:
+                    logmsg = 'Mode not supported at Device'
+                    self.msgbus_publish('LOG','%s VDM Mode: %s Device: %s Message: %s'%('ERROR', self._PIN_MODE, self._DEVICE_TYPE, logmsg))
+                    result = False
 
             else:
                 self.msgbus_publish('LOG','%s VPM mode of Port %s not fond %s '%('ERROR', portID,port_cfg.getNode('MODE')))

@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../Excel/.idea/Excel.iml" filepath="$PROJECT_DIR$/../Excel/.idea/Excel.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/config.iml" filepath="$PROJECT_DIR$/.idea/config.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Excel/excel/.idea/excel.iml" filepath="$PROJECT_DIR$/../Excel/excel/.idea/excel.iml" />
     </modules>
   </component>
 </project>

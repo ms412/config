@@ -6,7 +6,7 @@ from library.libmsgbus import msgbus
 
 #from module.manager.vdm import vdm
 
-class pulsee(msgbus):
+class pulse(msgbus):
     '''
     Function
     switch on/off the I/O port for a pre configured period. The ON/OFF period can be pre configured.
