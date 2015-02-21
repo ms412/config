@@ -326,10 +326,6 @@ class vdm(Thread,msgbus):
                 self._VPMobj[portID]=S0(portID,self._hwHandle,self._on_notify)
                 result = True
 
-            elif 'TIMER-IN' in self._PIN_MODE:
-                self._VPMobj[portID]=timerin(portID,self._hwHandle,self._on_notify)
-                result = True
-
             elif 'PWM' in self._PIN_MODE:
                 '''
                 mode only supported at raspberry I/O ports

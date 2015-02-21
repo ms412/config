@@ -10,6 +10,9 @@ class binin(msgbus):
     '''
     +++ Function +++
     configures the pin as Input
+    reads the current state of the input pin and returns every state change according OFF/ON_VALUE . In case INTERVAL is
+    set the current state of the pin reported after time interval is expired.
+    At every state change the time between the last change will be reported in the message
 
     +++ Configuration Parameter +++
     VDM_ID {
@@ -67,6 +70,7 @@ class binin(msgbus):
         '''
         self._pin_save = 'Unknown'
         self._T0 = time.time()
+        self._T0interval = time.time()
 
        # self._update = False
 
@@ -140,9 +144,9 @@ class binin(msgbus):
         if a update interval defined, send notification message after each completed interval
         '''
         if self._interval > 0:
-            if (self._T0 + self._interval) < time.time():
+            if (self._T0interval + self._interval) < time.time():
               #  print('Timeinterval', self._T0 + self._interval,'Actual',time.time())
-                self._T0 = time.time()
+                self._T0interval = time.time()
                 logmsg = ' Timeinterval expired'
                 self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
                 self.notify('UPDATE')
@@ -155,11 +159,12 @@ class binin(msgbus):
             self._pin_save = pin_act
             logmsg = 'Pin change detected'
             self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
-            self.notify()
+            self.notify(None,time.time()-self._T0)
+            self._T0 = time.time()
 
         return True
 
-    def notify(self,msg=None):
+    def notify(self,msg=None,time=None):
         '''
         in case potential of the pin changed, a notification will be emitted
         :return: dictionary
@@ -173,6 +178,8 @@ class binin(msgbus):
         msg_container = {}
 
         msg_container['VALUE'] = self._pin_save
+        if time:
+            msg_container['TIME'] = time.time() - self._T0
         if msg:
             msg_container['MSG'] = msg
         msg_container['STATE'] = 'TRUE'
