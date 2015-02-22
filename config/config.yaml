@@ -31,6 +31,10 @@ DEVICES:
    PIN_E: 8
    PIN_D: [25,24,23,18]
 
+  PWM-01:
+   MODE: PWM
+   HWID: 17
+
   IO-17:
  #  NAME: GPIO100
    HWID: 17
