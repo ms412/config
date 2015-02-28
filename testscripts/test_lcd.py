@@ -1,6 +1,8 @@
+
 import os
 import time
 import json
+from threading import Thread
 
 try:
     import paho.mqtt.client as mqtt
@@ -8,16 +10,17 @@ except:
     import paho as mqtt
     print ('start local mqtt driver')
 
-class mqttclient(object):
+class mqttclient(Thread):
 
     def __init__(self):
+        Thread.__init__(self)
 
-        self._host = '192.168.1.107'
+        self._host = '192.168.1.40'
         self._port = 1883
         self._sub_channel = '/OPENHAB'
-        self._pub_channel = '/GPIO1'
+        self._pub_channel = '/GPIO2'
 
-        self._mqttc = mqtt.Client(str(os.getpid()))
+        self._mqttc = mqtt.Client(str(os.getpid()),clean_session=True)
 
         '''
         Setup callbacks
@@ -29,6 +32,20 @@ class mqttclient(object):
 
         self.connect()
         self.subscribe()
+
+
+    def run(self):
+        self._mqttc.connect(self._host, self._port, 60)
+        self._mqttc.subscribe(self._sub_channel, 0)
+        rc = 0
+        while rc == 0:
+            # time.sleep(5)
+
+            rc = self._mqttc.loop()
+            print('mqtt print',rc)
+
+
+        return rc
 
     def mqtt_on_connect(self,mosq,obj,flags,rc):
         print('MQTT: connect to host:', self._host,str(rc))
@@ -49,12 +66,17 @@ class mqttclient(object):
     def connect(self):
         print ('Connect')
         self._mqttc.connect(self._host, self._port)
-        self._mqttc.loop_start()
+     #   run = True
+        #while run:
+      #  self._mqttc.loop_start()
+        return True
 
     def subscribe(self):
+        print('Subscribe')
         self._mqttc.subscribe(self._sub_channel,0)
 
     def publish(self,channel, message):
+        print('Publish')
         self._mqttc.publish(channel, message, 0)
 
 
@@ -84,7 +106,8 @@ def binout_add():
 def lcd_write():
     rest_lcd = {'TYPE':'SET','COMMAND':'RESET'}
     msg_lcd = {'TYPE':'SET','COMMAND':'MESSAGE','MESSAGE':'TEST'}
-    broker.publish("/GPIO1/I2C_x26/LCD-01",json.dumps(msg_lcd))
+    broker.publish("/GPIO2/RASP/LCD-01",json.dumps(msg_lcd))
+
     time.sleep(5)
 
 if __name__ == '__main__':
@@ -112,11 +135,16 @@ if __name__ == '__main__':
     msg_del_trigger1 = {'MESSAGE':{'TYPE':'CONFIG','MODE':'DEL'},'DEVICES':{'MCP23017_2':{'Port10':''}}}
   # msgStr = json.dumps(MSG)
 
+    msg_lcd_write ={'MESSAGE':{'TYPE':'SET','COMMAND':'MESSAGE','MESSAGE':'TTT'}}
+
     broker = mqttclient()
+    broker.start()
     time.sleep(3)
+    msg_lcd = {'TYPE':'SET','COMMAND':'MESSAGE','MESSAGE':'TEST \n HOME@'}
+    broker.publish("/GPIO2/I2C_x20/LCD-02",json.dumps(msg_lcd))
   #  binout_toggle()
    # binout_add()
-    lcd_write()
+  #  lcd_write()
 
 
 

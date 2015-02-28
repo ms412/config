@@ -114,12 +114,12 @@ class timerout(msgbus):
         '''
         set initial configuration
         '''
-        if self._initial == self._on_value:
-            self._hwHandle.WritePin(self._hwid, 1)
-            self._pin_save  = self._on_value
-        else:
-            self._hwHandle.WritePin(self._hwid, 0)
-            self._pin_save  =  self._off_value
+      #  if self._initial == self._on_value:
+       #     self._hwHandle.WritePin(self._hwid, 1)
+       #     self._pin_save  = self._on_value
+       # else:
+        #    self._hwHandle.WritePin(self._hwid, 0)
+        #    self._pin_save  =  self._off_value
 
         return True
 

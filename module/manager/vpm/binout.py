@@ -173,6 +173,7 @@ class binout(msgbus):
         msgtype = msg.get('TYPE',None)
         cmd = msg.get('COMMAND',self._off_value)
         print('Set Request',msg,msgtype,cmd)
+        self.msgbus_publish('LOG','%s VPM BinaryOut Port: %s Unknown value'%('ERROR','TESTESTETET'))
 
         if 'SET' in msgtype:
             if self._on_value in cmd:

@@ -179,7 +179,7 @@ class binin(msgbus):
 
         msg_container['VALUE'] = self._pin_save
         if time:
-            msg_container['TIME'] = time.time() - self._T0
+            msg_container['TIME'] = time - self._T0
         if msg:
             msg_container['MSG'] = msg
         msg_container['STATE'] = 'TRUE'

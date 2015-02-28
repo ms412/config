@@ -58,6 +58,11 @@ wget https://gist.githubusercontent.com/sebastianludwig/c648a9e06c0dc2264fbd/raw
     http://procrastinative.ninja/2014/07/21/smbus-for-python34-on-raspberry/
 
 
+mosquitto:
+sudo apt-get install mosquitto
+ sudo apt-get install mosquitto-clients
+
+
  Install:
  YAML
  sudo apt-get install python3-yaml

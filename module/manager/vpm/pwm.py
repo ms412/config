@@ -126,32 +126,10 @@ class pwm(msgbus):
         result = self._hwHandle.ReadPin(self._hwid)
       #  print('Binin',result,self._hwid)
 
-        if result == 0:
-            pin_act = self._off_value
-        else:
-            pin_act = self._on_value
-
-        '''
-        if a update interval defined, send notification message after each completed interval
-        '''
-        if self._interval > 0:
-            if (self._T0interval + self._interval) < time.time():
-              #  print('Timeinterval', self._T0 + self._interval,'Actual',time.time())
-                self._T0interval = time.time()
-                logmsg = ' Timeinterval expired'
-                self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
-                self.notify('UPDATE')
-
-       # print('PinSave',self._pin_save,'PinAct',pin_act)
-        '''
-        if Pin State changed notification has to be changed
-        '''
-        if not self._pin_save in pin_act:
-            self._pin_save = pin_act
-            logmsg = 'Pin change detected'
-            self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('INFO', self._mode, self._VPM_ID, logmsg))
-            self.notify(None,time.time()-self._T0)
-            self._T0 = time.time()
+       # if result == 0:
+        #    pin_act = self._off_value
+        #else:
+         #   pin_act = self._on_value
 
         return True
 
@@ -220,66 +198,3 @@ class pwm(msgbus):
         return True
 
 
-class PWM(object):
-'''
-classdocs
-'''
-def __init__(self, hwHandle, hwDevice, configuration):
-'''
-Constructor
-'''
-self._hwHandle = hwHandle
-self._hwDevice = hwDevice
-self._config = configuration
-self._loghandle = loghandle()
-self.Setup()
-def Setup(self):
-# self._SavePinState = ''
-if any(temp in self._hwDevice for temp in ['RASPBERRY']):
-'''
-Mandatory configuration Items
-'''
-try:
-self._NAME = self._config.get('NAME')
-self._HWID = int(self._config.get('HWID'))
-self._MODE = self._config.get('MODE','PWM')
-except:
-self._loghandle.critical('PWM::Init Mandatory Parameter missing for Port %s',self._NAME)
-'''
-optional configuration Items
-'''
-self._DIRECTION = self._config.get('DIRECTION','OUT')
-self._OFF_VALUE = self._config.get('OFF_VALUE','OFF')
-self._ON_VALUE = self._config.get('ON_VALUE','ON')
-'''
-Define class variables
-'''
-self._SavePinState = ''
-self._pwmState = False
-'''
-configure port as Input
-'''
-self._hwHandle.ConfigPWM(self._HWID)
-self._loghandle.info('VPM_PWM::Init Configure Port %s HardwareID %s in Mode %s',self._NAME,self._HWID,self._MODE)
-else:
-self._loghandle.crittical('VPM_PWM::Setup: Device not Supported')
-return True
-def Set(self, value):
-try:
-self._loghandle.info('VPM_PWM::SetPWM value write PWM %s write %s',self._NAME,value)
-self._flashFrequency = float(value)
-self._hwHandle.WritePWM(self._HWID,value)
-except ValueError:
-# self._flashFrequency = int(2)
-# self._t1 = time.clock()
-self._loghandle.error('VPM_PWM::SetPWM value error %s not supported',value)
-return True
-def Get(self):
-'''
-Returns current state of port in Dictionary
-VALUE: as defined in ON/OFF_VALUE
-STATE: True/False whether VALUE true or false
-'''
-return {'VALUE':True,'NAME':self.GetName(),'STATE':True}
-def Update(self):
-return True

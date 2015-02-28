@@ -98,20 +98,41 @@ class lcd(msgbus):
 
         cfg = msg.select(self._VPM_ID)
 
-        self._pin_rs = int(cfg.getNode('PIN_RS',None))
-        self._pin_e = int(cfg.getNode('PIN_E',None))
-        self._pin_d = list(cfg.getNode('PIN_D',None))
+        self._pin_rs = int(cfg.getNode('PIN_RS',-1))
+        self._pin_rw = int(cfg.getNode('PIN_RW',-1))
+        self._pin_e = int(cfg.getNode('PIN_E',-1))
+        self._pin_d = list(cfg.getNode('PIN_D',-1))
        # test = map(int,self._pin_d)
         self._pin_d = [int(i) for i in self._pin_d]
-        print('LCD Config interface',self._pin_rs, self._pin_e, self._pin_d)
-        if not self._pin_rs or not self._pin_e or not self._pin_d:
-            logmsg = 'One of the mandatory Port Pin configuration is missing'
+
+        print('LCD Config interface',self._pin_rs, self._pin_e, self._pin_rw, self._pin_d)
+
+        #if not self._pin_rs or not self._pin_e or not self._pin_rw:
+        if self._pin_rs < 0:
+            print ('LCD PIN RS Missing')
+            logmsg = 'Register Select Pin configuration missing'
             self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
-           # print('VPM::ERROR no HWID in config')
+        #    print('VPM::ERROR no HWID in config')
+        elif self._pin_rw < 0:
+            print('LCD Pin RW missing')
+            logmsg = 'Read/Write Pin configuration missing'
+            self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
+        elif self._pin_e < 0:
+            print ('LCD Pin E missing')
+            logmsg = 'Enable Pin configuration missing'
+            self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
+        elif len(self._pin_d) < 4:
+            print ('LCD Pin D missing')
+            logmsg = 'DATA Pin configuration not complete'
+            self.msgbus_publish('LOG','%s VPM Mode: %s ID: %s; Message: %s'%('ERROR', self._mode, self._VPM_ID, logmsg))
         else:
         #    print('VPM:', self._hwid)
+            print('LCD set at output')
             self._hwHandle.ConfigIO(self._pin_rs,'OUT')
             self._hwHandle.ConfigIO(self._pin_e,'OUT')
+            self._hwHandle.ConfigIO(self._pin_rw,'OUT')
+            self._hwHandle.WritePin(self._pin_rw,0)
+
             for pin in self._pin_d:
                 print('LCD pin id',pin)
                 self._hwHandle.ConfigIO(pin,'OUT')

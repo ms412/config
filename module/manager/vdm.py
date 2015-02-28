@@ -17,11 +17,11 @@ import port manager
 from module.manager.vpm.binin import binin
 from module.manager.vpm.binout import binout
 from module.manager.vpm.trigger import trigger
-from module.manager.vpm.timerout import pulse
+from module.manager.vpm.timerout import timerout
 from module.manager.vpm.lcd import lcd
 from module.manager.vpm.S0 import S0
 from module.manager.vpm.pwm import pwm
-from module.manager.vpm.timerin import timerin
+#from module.manager.vpm.timerin import timerin
 
 class vdm(Thread,msgbus):
     '''
@@ -190,7 +190,7 @@ class vdm(Thread,msgbus):
         for k in msg.keys():
             port = self._VPMobj.get(k,None)
             if not port:
-                self.msgbus_publish('LOG','%s VDM Requested Port does not exist: %s in Device: %s'%'ERROR',k,self._DevName)
+                self.msgbus_publish('LOG','%s VDM Requested Port does not exist: %s in Device: %s'%('ERROR',k,self._DevName))
             else:
                 port.request(msg.get(k))
                 result = True
@@ -315,7 +315,7 @@ class vdm(Thread,msgbus):
                 result = True
 
             elif 'PULSE' in self._PIN_MODE:
-                self._VPMobj[portID]=pulse(portID,self._hwHandle,self._on_notify)
+                self._VPMobj[portID]=timerout(portID,self._hwHandle,self._on_notify)
                 result = True
 
             elif 'LCD' in self._PIN_MODE:
