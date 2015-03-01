@@ -49,14 +49,29 @@ DEVICES:
   I2C_ADDRESS: 0x20
   TYPE: MCP23017
   UPDATE: 1.0
-  #NAME: DEVICE02
 
   LCD-02:
+   #LCD HD44780
    MODE: LCD
+   #Register Select Pin
    PIN_RS: 0
+   #Select Read Write (optional) connect to GND
    PIN_RW: 1
+   #Enable Read Write
    PIN_E: 2
+   # Data Pins
+   # DB4, DB5, DB6, DB7
    PIN_D: [3,4,5,6]
+
+  IO-07:
+ #  NAME: GPIO100
+   HWID: 7
+   ON_VALUE: OPEN
+   OFF_VALUE: CLOSED
+   MODE: BINARY-IN
+   #UPDATE Inteval
+   INTERVAL: 0
+
 
  I2C_x26:
   SYSTEM: RASPBERRY_B1

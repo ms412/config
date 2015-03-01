@@ -1,10 +1,63 @@
 
 import json
 import time
-
 from library.libmsgbus import msgbus
 
 #from module.manager.vdm import vdm
+
+# Commands
+LCD_CLEARDISPLAY = 0x01
+LCD_RETURNHOME = 0x02
+LCD_ENTRYMODESET = 0x04
+LCD_DISPLAYCONTROL = 0x08
+LCD_CURSORSHIFT = 0x10
+LCD_FUNCTIONSET = 0x20
+LCD_SETCGRAMADDR = 0x40
+LCD_SETDDRAMADDR = 0x80
+# Entry flags
+LCD_ENTRYRIGHT = 0x00
+LCD_ENTRYLEFT = 0x02
+LCD_ENTRYSHIFTINCREMENT = 0x01
+LCD_ENTRYSHIFTDECREMENT = 0x00
+# Control flags
+LCD_DISPLAYON = 0x04
+LCD_DISPLAYOFF = 0x00
+LCD_CURSORON = 0x02
+LCD_CURSOROFF = 0x00
+LCD_BLINKON = 0x01
+LCD_BLINKOFF = 0x00
+# Move flags
+LCD_DISPLAYMOVE = 0x08
+LCD_CURSORMOVE = 0x00
+LCD_MOVERIGHT = 0x04
+LCD_MOVELEFT = 0x00
+# Function set flags
+LCD_8BITMODE = 0x10
+LCD_4BITMODE = 0x00
+LCD_2LINE = 0x08
+LCD_1LINE = 0x00
+LCD_5x10DOTS = 0x04
+LCD_5x8DOTS = 0x00
+# Offset for up to 4 rows.
+LCD_ROW_OFFSETS = (0x00, 0x40, 0x14, 0x54)
+# Char LCD plate GPIO numbers.
+LCD_PLATE_RS = 15
+LCD_PLATE_RW = 14
+LCD_PLATE_EN = 13
+LCD_PLATE_D4 = 12
+LCD_PLATE_D5 = 11
+LCD_PLATE_D6 = 10
+LCD_PLATE_D7 = 9
+LCD_PLATE_RED = 6
+LCD_PLATE_GREEN = 7
+LCD_PLATE_BLUE = 8
+# Char LCD plate button names.
+SELECT = 0
+RIGHT = 1
+DOWN = 2
+UP = 3
+LEFT = 4
+
 
 class lcd(msgbus):
     '''
@@ -130,14 +183,20 @@ class lcd(msgbus):
             print('LCD set at output')
             self._hwHandle.ConfigIO(self._pin_rs,'OUT')
             self._hwHandle.ConfigIO(self._pin_e,'OUT')
+            self._hwHandle.WritePin(self._pin_e,0)
             self._hwHandle.ConfigIO(self._pin_rw,'OUT')
             self._hwHandle.WritePin(self._pin_rw,0)
 
             for pin in self._pin_d:
                 print('LCD pin id',pin)
                 self._hwHandle.ConfigIO(pin,'OUT')
+                self._hwHandle.WritePin(pin,0)
+
+            time.sleep(1)
 
             self._lcd_reset()
+            time.sleep(3)
+            self._lcd_message('TEST \n 123')
 
         return True
 
@@ -204,36 +263,50 @@ class lcd(msgbus):
     def _lcd_cmd(self, bits, char_mode=False):
         """ Send command to LCD """
 
-        time.sleep(0.001)
+      #  time.sleep(0.001)
         bits=bin(bits)[2:].zfill(8)
 
         self._hwHandle.WritePin(self._pin_rs, char_mode)
-
+       # time.sleep(0.001)
        # GPIO.output(self.pin_rs, char_mode)
 
-        for pin in self._pin_d:
-            self._hwHandle.WritePin(pin,0)
-
+        #for pin in self._pin_d:
+       #     self._hwHandle.WritePin(pin,0)
+        print ('Write 1-4')
         for i in range(4):
             print ('Int',i,bits,bits[i],self._pin_d,self._pin_d[::-1][i])
             if bits[i] == "1":
                 self._hwHandle.WritePin(self._pin_d[::-1][i],1)
+            else:
+                self._hwHandle.WritePin(self._pin_d[::-1][i],0)
+           #     print ('Write 1-4', self._pin_d, bits, bits[i])
 
-        self._hwHandle.WritePin(self._pin_e,1)
-        self._hwHandle.WritePin(self._pin_e,0)
+
+        self._pulse_enable()
+       # self._hwHandle.WritePin(self._pin_e,1)
+       # self._hwHandle.WritePin(self._pin_e,0)
       #  GPIO.output(self.pin_e, True)
        # GPIO.output(self.pin_e, False)
 
-        for pin in self._pin_d:
-            self._hwHandle.WritePin(pin,0)
-
+       # for pin in self._pin_d:
+        #    self._hwHandle.WritePin(pin,0)
+        print ('Write 5-8')
         for i in range(4,8):
+            print ('Int',i,bits,bits[i],self._pin_d,self._pin_d[::-1][i-4])
             if bits[i] == "1":
                 self._hwHandle.WritePin(self._pin_d[::-1][i-4],1)
+            else:
+                self._hwHandle.WritePin(self._pin_d[::-1][i-4],0)
+           #     print ('Write 5-8', self._pin_d, bits, bits[i])
               #  GPIO.output(self.pins_db[::-1][i-4], True)
 
-        self._hwHandle.WritePin(self._pin_e,1)
-        self._hwHandle.WritePin(self._pin_e,0)
+        self._pulse_enable()
+
+       # for pin in self._pin_d:
+        #    self._hwHandle.WritePin(pin,0)
+
+   #     self._hwHandle.WritePin(self._pin_e,1)
+    #    self._hwHandle.WritePin(self._pin_e,0)
 
     #@    GPIO.output(self.pin_e, True)
      #   GPIO.output(self.pin_e, False)
@@ -246,7 +319,24 @@ class lcd(msgbus):
         self._lcd_cmd(0x28) # $28 8-bit mode
         self._lcd_cmd(0x0C) # $0C 8-bit mode
         self._lcd_cmd(0x06) # $06 8-bit mode
-        self._lcd_cmd(0x01)# $01 8-bit mode
+
+        # Write registers.
+        #self._lcd_cmd(LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF)
+        #self._lcd_cmd(LCD_4BITMODE | LCD_1LINE | LCD_2LINE | LCD_5x8DOTS)
+        #self._lcd_cmd(LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT)
+       # print('DISPLAY',LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF)
+       # print('DISPLAY',LCD_4BITMODE | LCD_1LINE | LCD_2LINE | LCD_5x8DOTS)
+        #print('DISPLAY',LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT)
+
+        self._lcd_clear()
+
+        return True
+
+    def _lcd_clear(self):
+        self._lcd_cmd(LCD_CLEARDISPLAY)# $01 8-bit mode
+        time.sleep(0.001)
+
+        return True
 
     def _lcd_message(self, text):
         """ Send string to LCD. Newline wraps to second line"""
@@ -256,4 +346,19 @@ class lcd(msgbus):
                 self._lcd_cmd(0xC0) # next line
             else:
                 self._lcd_cmd(ord(char),True)
+
+        return True
+
+    def _pulse_enable(self):
+        print('LCD Pulse Enable')
+        time.sleep(0.001)
+        self._hwHandle.WritePin(self._pin_e,0)
+        time.sleep(0.003)
+        self._hwHandle.WritePin(self._pin_e,1)
+        time.sleep(0.001)
+        self._hwHandle.WritePin(self._pin_e,0)
+        #time.sleep(0.001)
+
+        return True
+
 
