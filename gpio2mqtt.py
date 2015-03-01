@@ -47,28 +47,28 @@ class manager(msgbus):
 
 
     def start_config(self):
-        print('Start Configuration',self._cfg_file)
+     #   print('Start Configuration',self._cfg_file)
         self._cfg_thread = configmodule(self._cfg_file)
         self._cfg_thread.start()
 
     def start_logging(self):
-        print('Debug Logging1')
+    #    print('Debug Logging1')
         self._log_thread = log_adapter()
         self._log_thread.start()
-        self.msgbus_publish('LOG','%s Start Logging Adapter')
+     #   self.msgbus_publish('LOG','%s Start Logging Adapter')
 
     #def start_borker(self):
     def start_msgbroker(self):
-        print('Start Message Broker')
+      #  print('Start Message Broker')
        # self.msgbus_publish('LOG','%s Start MQTT broker'%('INFO'))
         self._msgbroker = msgadapter()
         self._msgbroker.start()
-        self.msgbus_publish('LOG','%s Start Message broker')
+       # self.msgbus_publish('LOG','%s Start Message broker')
         return True
 
     def start_devices(self):
-        print('Start Devices')
-        self.msgbus_publish('LOG','%s Start VHM Virtual Hardware Manager')
+        #print('Start Devices')
+        #self.msgbus_publish('LOG','%s Start VHM Virtual Hardware Manager')
         self._vhm_thread = vhm()
         return True
 
@@ -76,10 +76,12 @@ class manager(msgbus):
         """
         Entry point, initiates components and loops forever...
         """
-        self.start_config()
+
         self.start_logging()
-        self.start_msgbroker()
         self.msgbus_publish('LOG','%s Start mqtt2gpio adapter; Version: %s, %s '%('INFO', __VERSION__ ,__DATE__))
+        self.start_config()
+        self.start_msgbroker()
+
 
         self.start_devices()
 
@@ -93,6 +95,6 @@ if __name__ == "__main__":
     else:
         configfile = '/etc/gpio2mqtt/gpio2mqtt.yaml'
 
-    print('Configfile',configfile)
+   # print('Configfile',configfile)
     mgr_handle = manager(configfile)
     mgr_handle.run()

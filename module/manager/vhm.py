@@ -32,7 +32,7 @@ class vhm(msgbus):
 
         self.msgObj = 0
 
-        print ('###InitVHM###')
+       # print ('###InitVHM###')
         self.setup()
 
     def setup(self):
@@ -132,9 +132,10 @@ class vhm(msgbus):
         :return: True
         '''
 
-        print('VHM::start devices',devices)
+      #  print('VHM::start devices',devices)
 
         for device in devices:
+            self.msgbus_publish('LOG','%s VHM Start VDM device %s '%('INFO', device))
             '''
             hands over device name and callback interface for notifications
             and starts thread
@@ -155,9 +156,10 @@ class vhm(msgbus):
         :return: True
         '''
 
-        print('VHM::stop devices',devices)
+        #print('VHM::stop devices',devices)
 
         for device in devices:
+            self.msgbus_publish('LOG','%s VHM Stop VDM device %s '%('INFO', device))
             '''
             stops each device in device list and stops each VDM device listed
             '''

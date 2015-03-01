@@ -210,7 +210,7 @@ class vdm(Thread,msgbus):
         selects the concerning branch of the Tree object
         '''
         device = cfg_msg.select(self._DevName)
-        self.msgbus_publish('LOG','%s VDM Configuration Update for Device: %s, Config: %s '%('INFO', self._DevName, device.getTree()))
+        self.msgbus_publish('LOG','%s VDM Configuration Device: %s, Config: %s '%('INFO', self._DevName, device.getTree()))
         print('VDMgetNodes',device.getNodesKey())
 
         '''
@@ -229,7 +229,7 @@ class vdm(Thread,msgbus):
         '''
 
         if 'MCP23017' in self._DEVICE_TYPE:
-            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type: %s'%('INFO', self._DevName, self._DEVICE_TYPE))
+           # self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type: %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
             self._I2C_ADDRESS = int(device.getNode('I2C_ADDRESS'),16)
             if 'RASPBERRY_B1' in self._SYSTEM_TYPE:
@@ -245,7 +245,7 @@ class vdm(Thread,msgbus):
             manage the Raspberry GPIOs
             '''
         elif 'RASPBERRY' in self._DEVICE_TYPE:
-            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type %s'%('INFO', self._DevName, self._DEVICE_TYPE))
+            #self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, Type %s'%('INFO', self._DevName, self._DEVICE_TYPE))
             self._SYSTEM_TYPE = str(device.getNode('SYSTEM','RASPBERRY_B1'))
             self._hwHandle = raspberry()
             #device.addNode('HW_HANDLE', self._hwHandle)
@@ -255,20 +255,21 @@ class vdm(Thread,msgbus):
             add more HW interface driver in the future
             '''
         else:
-            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, UNKNOWN'%('INFO', self._DevName))
+            self.msgbus_publish('LOG','%s VDM Start HW Manager for Device: %s, UNKNOWN'%('ERROR', self._DevName))
             result = False
-            print('VDM:: unknown device',self._DEVICE_TYPE)
+            #print('VDM:: unknown device',self._DEVICE_TYPE)
 
         '''
         compare running VPM devices with configured devices
         '''
         cfg_device = set(device.getNodesKey())
         run_device = set(self._VPMobj.keys())
-        print('VDM::VPM ports to confiure:', cfg_device,'run:',run_device)
+     #   print('VDM::VPM ports to confiure:', cfg_device,'run:',run_device)
         '''
         list devices of VPM to be started
         '''
-        print('VDM::START VPM',list(cfg_device.difference(run_device)))
+       # self.msgbus_publish('LOG','%s VDM Start VPM: %s, UNKNOWN'%('ERROR', self._DevName))
+        #print('VDM::START VPM',list(cfg_device.difference(run_device)))
         self.start_vpm(list(cfg_device.difference(run_device)),device)
         '''
         list devices of VPM to be stopped
@@ -277,7 +278,7 @@ class vdm(Thread,msgbus):
         '''
         VPM devices to be configured
         '''
-        print ('VDM::Configure existing VPMs:',device.getNodesKey())
+        #print ('VDM::Configure existing VPMs:',device.getNodesKey())
         self.cfg_vpm(device)
 
         return result
@@ -296,7 +297,7 @@ class vdm(Thread,msgbus):
         for portID in device:
             port_cfg = cfg_msg.select(portID)
             self._PIN_MODE = str(port_cfg.getNode('MODE'))
-            print ('start vpm mode',port_cfg.getNode('MODE'),portID,self._hwHandle,port_cfg)
+         #   print ('start vpm mode',port_cfg.getNode('MODE'),portID,self._hwHandle,port_cfg)
 
             '''
             Start virtual port manager according configuration

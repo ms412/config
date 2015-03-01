@@ -141,7 +141,7 @@ if __name__ == '__main__':
     broker.start()
     time.sleep(3)
     msg_lcd = {'TYPE':'SET','COMMAND':'MESSAGE','MESSAGE':'TEST \n HOME@'}
-    broker.publish("/GPIO2/I2C_x20/LCD-02",json.dumps(msg_lcd))
+    broker.publish("/GPIO1/I2C_x20/LCD-02",json.dumps(msg_lcd))
   #  binout_toggle()
    # binout_add()
   #  lcd_write()

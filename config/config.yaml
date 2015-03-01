@@ -2,7 +2,7 @@
 GENERAL:
  #Allowed LOGMODEs
  # INFO, WARNING, ERROR, CRITICAL, DEBUG
- LOGMODE: WARNING
+ LOGMODE: INFO
  #LOGFILE: ./gpio2mqtt.log
  LOGFILE: /var/log/gpio2mqtt.log
  UPDATE: 1.0
