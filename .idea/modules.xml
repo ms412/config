@@ -2,9 +2,13 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../DefectMeeting001/.idea/DefectMeeting001.iml" filepath="$PROJECT_DIR$/../DefectMeeting001/.idea/DefectMeeting001.iml" />
       <module fileurl="file://$PROJECT_DIR$/../Excel/.idea/Excel.iml" filepath="$PROJECT_DIR$/../Excel/.idea/Excel.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../GUI_QT001/.idea/GUI_QT001.iml" filepath="$PROJECT_DIR$/../GUI_QT001/.idea/GUI_QT001.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ReadPMD/.idea/ReadPMD.iml" filepath="$PROJECT_DIR$/../ReadPMD/.idea/ReadPMD.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/config.iml" filepath="$PROJECT_DIR$/.idea/config.iml" />
       <module fileurl="file://$PROJECT_DIR$/../Excel/excel/.idea/excel.iml" filepath="$PROJECT_DIR$/../Excel/excel/.idea/excel.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../test003.py/.idea/test003.py.iml" filepath="$PROJECT_DIR$/../test003.py/.idea/test003.py.iml" />
     </modules>
   </component>
 </project>

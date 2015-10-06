@@ -6,6 +6,10 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Excel" />
     <orderEntry type="module" module-name="excel" />
+    <orderEntry type="module" module-name="DefectMeeting001" />
+    <orderEntry type="module" module-name="GUI_QT001" />
+    <orderEntry type="module" module-name="test003.py" />
+    <orderEntry type="module" module-name="ReadPMD" />
   </component>
 </module>
 
